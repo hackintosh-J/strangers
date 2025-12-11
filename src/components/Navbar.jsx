@@ -21,10 +21,10 @@ export default function Navbar() {
                                     <Shield size={20} />
                                 </Link>
                             )}
-                            <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <Link to="/profile" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-black transition-colors">
                                 <User size={18} />
                                 <span>{user.username}</span>
-                            </div>
+                            </Link>
                             <button
                                 onClick={logout}
                                 className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
