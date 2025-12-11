@@ -56,10 +56,10 @@ export default function PostDetail() {
         <div className="flex min-h-screen bg-paper">
             <Sidebar />
 
-            <main className="flex-1 w-full max-w-4xl mx-auto border-x border-warm-100 min-h-screen bg-white shadow-sm flex flex-col">
+            <main className="flex-1 w-full max-w-4xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft flex flex-col pb-20 md:pb-0">
                 {/* Nav Header */}
-                <div className="p-4 border-b border-warm-100 sticky top-0 bg-white/95 backdrop-blur z-20 flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-warm-50 rounded-full text-pencil transition-colors">
+                <div className="p-4 border-b border-oat-200 sticky top-0 bg-white/95 backdrop-blur z-20 flex items-center gap-4">
+                    <button onClick={() => navigate(-1)} className="p-2 hover:bg-oat-100 rounded-full text-oat-400 hover:text-ink transition-colors">
                         <ArrowLeft size={20} />
                     </button>
                     <span className="font-serif font-bold text-ink">
@@ -68,14 +68,14 @@ export default function PostDetail() {
                 </div>
 
                 {loading ? (
-                    <div className="p-20 text-center text-warm-300">加载中...</div>
+                    <div className="p-20 text-center text-oat-300">加载中...</div>
                 ) : (
                     <>
                         <article className="p-8 md:p-12 animate-fade-in">
                             {/* Title & Meta */}
                             <div className="mb-8 text-center">
                                 {post.title && <h1 className="text-3xl md:text-4xl font-serif font-bold text-ink mb-4 leading-tight">{post.title}</h1>}
-                                <div className="flex items-center justify-center gap-4 text-sm text-warm-400 font-sans">
+                                <div className="flex items-center justify-center gap-4 text-sm text-oat-400 font-sans">
                                     <span>{post.nickname || '路人'}</span>
                                     <span>•</span>
                                     <span className="flex items-center gap-1">
@@ -92,7 +92,7 @@ export default function PostDetail() {
                         </article>
 
                         {/* Comments Area */}
-                        <div className="bg-warm-50 mt-auto border-t border-warm-100 p-8 md:p-12">
+                        <div className="bg-oat-50 mt-auto border-t border-oat-200 p-8 md:p-12">
                             <h3 className="text-xl font-serif font-bold text-ink mb-8 flex items-center gap-2">
                                 <MessageSquare size={20} />
                                 <span>评论 ({comments.length})</span>
@@ -101,25 +101,25 @@ export default function PostDetail() {
                             <div className="space-y-6 mb-10">
                                 {comments.map(c => (
                                     <div key={c.id} className="flex gap-4 group">
-                                        <div className="w-8 h-8 rounded-full bg-white border border-warm-100 flex items-center justify-center text-xs font-bold text-warm-500 shrink-0">
+                                        <div className="w-8 h-8 rounded-full bg-white border border-oat-200 flex items-center justify-center text-xs font-bold text-oat-500 shrink-0">
                                             {c.username ? c.username[0].toUpperCase() : 'U'}
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-baseline gap-2 mb-1">
                                                 <span className="text-sm font-bold text-ink">{c.username}</span>
-                                                <span className="text-xs text-warm-300">{new Date(c.created_at * 1000).toLocaleString()}</span>
+                                                <span className="text-xs text-oat-300">{new Date(c.created_at * 1000).toLocaleString()}</span>
                                             </div>
-                                            <p className="text-pencil leading-relaxed text-sm md:text-base">{c.content}</p>
+                                            <p className="text-oat-600 leading-relaxed text-sm md:text-base">{c.content}</p>
                                         </div>
                                     </div>
                                 ))}
-                                {comments.length === 0 && <p className="text-warm-300 text-center text-sm">还没有人说话，也许此刻正是时候。</p>}
+                                {comments.length === 0 && <p className="text-oat-400 text-center text-sm">还没有人说话，也许此刻正是时候。</p>}
                             </div>
 
                             {/* Comment Input */}
                             <div className="flex gap-4">
                                 <input
-                                    className="flex-1 bg-white border-warm-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-warm-100 transition-all text-ink placeholder-warm-300"
+                                    className="flex-1 bg-white border-oat-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-haze-100 transition-all text-ink placeholder-oat-300"
                                     placeholder="写下你的回应..."
                                     value={newComment}
                                     onChange={e => setNewComment(e.target.value)}

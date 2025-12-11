@@ -16,13 +16,13 @@ export default function Dashboard() {
 
     const ChannelCard = ({ channel }) => (
         <Link to={`/channel/${channel.slug}`} className="block group">
-            <div className="bg-white rounded-2xl p-6 border border-warm-100 shadow-sm hover:shadow-md hover:border-warm-200 transition-all h-full flex flex-col items-center text-center">
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 transform">
+            <div className="bg-white rounded-2xl p-6 border border-oat-200 shadow-soft func-hover transition-all h-full flex flex-col items-center text-center">
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 transform grayscale group-hover:grayscale-0">
                     {channel.icon}
                 </div>
                 <h3 className="text-xl font-serif font-bold text-ink mb-2">{channel.name}</h3>
-                <p className="text-pencil text-sm line-clamp-2">{channel.description}</p>
-                <div className="mt-auto pt-4 flex items-center gap-1 text-warm-400 text-sm font-medium group-hover:text-warm-600">
+                <p className="text-oat-400 text-sm line-clamp-2">{channel.description}</p>
+                <div className="mt-auto pt-4 flex items-center gap-1 text-haze-400 text-sm font-medium group-hover:text-haze-600">
                     <span>进入板块</span>
                     <ArrowRight size={16} />
                 </div>
@@ -34,24 +34,23 @@ export default function Dashboard() {
         <div className="flex min-h-screen bg-paper">
             <Sidebar />
 
-            <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8">
+            <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
                 {/* Welcome Banner */}
-                <div className="bg-warm-600 rounded-3xl p-8 md:p-12 text-white mb-12 shadow-lg relative overflow-hidden">
+                <div className="bg-oat-100 rounded-3xl p-8 md:p-12 text-ink mb-12 shadow-sm relative overflow-hidden border border-oat-200">
                     <div className="relative z-10">
-                        <h1 className="text-3xl md:text-5xl font-serif font-bold mb-4">欢迎回家，陌生人。</h1>
-                        <p className="text-warm-50/90 text-lg md:text-xl max-w-2xl font-serif">
+                        <h1 className="text-3xl md:text-5xl font-serif font-bold mb-4 text-haze-900">欢迎回家，陌生人。</h1>
+                        <p className="text-haze-700/80 text-lg md:text-xl max-w-2xl font-serif">
                             这是一个温暖的角落。在这里，你可以卸下防备，诉说心事，或者静静地阅读他人的故事。
                         </p>
                     </div>
                     {/* Decorative Circles */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/4 blur-2xl" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
                 </div>
 
                 {/* Channels Grid */}
                 <section className="mb-12">
                     <div className="flex items-center gap-2 mb-6 text-ink font-serif font-bold text-xl">
-                        <span className="w-1 h-6 bg-warm-400 rounded-full" />
+                        <span className="w-1 h-6 bg-haze-400 rounded-full" />
                         <h2>探索板块</h2>
                     </div>
 
@@ -61,9 +60,9 @@ export default function Dashboard() {
                         )) : (
                             // Skeleton / Fallback while fetching or if empty
                             <>
-                                <div className="h-48 bg-warm-50 rounded-2xl animate-pulse" />
-                                <div className="h-48 bg-warm-50 rounded-2xl animate-pulse" />
-                                <div className="h-48 bg-warm-50 rounded-2xl animate-pulse" />
+                                <div className="h-48 bg-oat-50 rounded-2xl animate-pulse" />
+                                <div className="h-48 bg-oat-50 rounded-2xl animate-pulse" />
+                                <div className="h-48 bg-oat-50 rounded-2xl animate-pulse" />
                             </>
                         )}
                     </div>
@@ -72,10 +71,10 @@ export default function Dashboard() {
                 {/* Latest / Hot (Placeholder for V4 phase 2) */}
                 <section>
                     <div className="flex items-center gap-2 mb-6 text-ink font-serif font-bold text-xl">
-                        <Flame size={20} className="text-warm-500 fill-warm-500" />
+                        <Flame size={20} className="text-rose-400 fill-rose-400" />
                         <h2>热门动态</h2>
                     </div>
-                    <div className="bg-white rounded-2xl border border-warm-100 p-8 text-center text-warm-300 italic">
+                    <div className="bg-white rounded-2xl border border-oat-200 p-8 text-center text-oat-400 italic">
                         热门榜单正在生成中... 先去板块里看看吧。
                     </div>
                 </section>
