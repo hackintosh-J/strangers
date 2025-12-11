@@ -19,6 +19,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/channel/:slug" element={<ChannelFeed />} />
                     <Route path="/post/:id" element={<PostDetail />} />
+                    <Route path="/drifting" element={<Drifting />} />
 
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin" element={<Admin />} />
