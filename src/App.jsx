@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import About from './pages/About';
 import ChannelFeed from './pages/ChannelFeed';
 import PostDetail from './pages/PostDetail';
+import Drifting from './pages/Drifting';
 
 function App() {
     return (

@@ -216,6 +216,37 @@ app.get('/api/channels/:slug/messages', async (c) => {
     }
 });
 
+// --- Drifting (Bottle) APIs ---
+app.get('/api/bottles/random', async (c) => {
+    try {
+        // Get ID of 'hollow' channel
+        const channel = await c.env.DB.prepare("SELECT id FROM channels WHERE slug = 'hollow'").first();
+        if (!channel) return c.json({ error: 'Hollow channel not found' }, 404);
+
+        // Fetch one random message from hollow
+        // SQLite RANDOM() is efficient enough for small-medium datasets
+        const message = await c.env.DB.prepare(`
+            SELECT m.*, u.username,
+            (SELECT COUNT(*) FROM comments WHERE message_id = m.id) as comment_count,
+            (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count
+            FROM messages m
+            LEFT JOIN users u ON m.user_id = u.id
+            WHERE m.channel_id = ?
+            ORDER BY RANDOM() LIMIT 1
+        `).bind(channel.id).first();
+
+        if (!message) return c.json({ data: null }); // No bottles in the sea
+
+        return c.json({ data: message });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
+// POST /api/bottles effectively uses /api/messages with channel_slug='hollow'
+// But we can add a specific alias if needed. For now, frontend will just use POST /api/messages.
+
+// --- Message APIs ---
 // Get Single Message Detail (Full Content + Comments)
 app.get('/api/messages/:id', async (c) => {
     try {
