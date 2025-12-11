@@ -121,11 +121,15 @@ app.post('/api/auth/login', async (c) => {
 
 // --- User Management Routes ---
 app.get('/api/users', authMiddleware, async (c) => {
-    const user = c.get('jwtPayload');
-    if (user.role !== 'admin') return c.json({ error: 'Forbidden' }, 403);
+    try {
+        const user = c.get('jwtPayload');
+        if (user.role !== 'admin') return c.json({ error: 'Forbidden' }, 403);
 
-    const { results } = await c.env.DB.prepare("SELECT id, username, role, created_at FROM users ORDER BY created_at DESC").all();
-    return c.json(results);
+        const { results } = await c.env.DB.prepare("SELECT id, username, role, created_at FROM users ORDER BY created_at DESC").all();
+        return c.json(results);
+    } catch (e) {
+        return c.json({ error: e.message, stack: e.stack }, 500);
+    }
 });
 
 app.delete('/api/users/:id', authMiddleware, async (c) => {

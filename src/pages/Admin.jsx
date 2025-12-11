@@ -32,7 +32,13 @@ export default function Admin() {
             const res = await fetch(`${API_URL}/api/users`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) setUsers(await res.json());
+            if (res.ok) {
+                setUsers(await res.json());
+            } else {
+                const data = await res.json();
+                console.error('Fetch users failed:', data);
+                alert('无法获取用户列表: ' + (data.error || res.status));
+            }
         } catch (e) { console.error(e); }
     };
 
