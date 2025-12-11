@@ -1,14 +1,8 @@
-/**
- * Strangers v2 Configuration
- */
 const CONFIG = {
-  // 您的 GitHub 用户名（或组织名）
-  owner: 'hackintosh-J',
-
-  // 您的仓库名称
-  repo: 'strangers',
-
-  token: '',
+  // Cloudflare Worker API URL
+  // 部署完成后，请将此处替换为您的 Worker URL
+  // 例如: https://strangers-backend.your-name.workers.dev
+  apiUrl: 'YOUR_WORKER_URL_HERE',
 };
 
 // 防止修改

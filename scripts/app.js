@@ -1,27 +1,21 @@
-// App Controller
+// App Controller (V5: Cloudflare Edition)
 const App = {
     state: {
         messages: [],
-        page: 1,
         isLoading: false,
-        hasMore: true,
         isSubmitting: false,
-        token: null,
     },
 
     constants: {
-        CACHE_KEY: 'strangers_cache_v1',
+        CACHE_KEY: 'strangers_cache_v5',
         REFRESH_KEY: 'strangers_last_refresh',
-        TOKEN_KEY: 'strangers_token',
-        REFRESH_COOLDOWN: 60 * 1000,
+        REFRESH_COOLDOWN: 5 * 1000, // Reduced to 5s for better experience with powerful backend
     },
 
-    elements: {}, // Init in initElements
+    elements: {},
 
     init() {
-        console.log('App initializing...');
         this.initElements();
-        this.loadToken();
         this.bindEvents();
         this.loadInitialData();
     },
@@ -33,38 +27,19 @@ const App = {
 
             // Modals
             modalWrite: document.getElementById('modal-write'),
-            modalSettings: document.getElementById('modal-settings'),
 
             // Forms
             formWrite: document.getElementById('form-write'),
-            formSettings: document.getElementById('form-settings'),
 
             // Inputs
-            tokenInput: document.getElementById('token-input'),
             nicknameInput: document.getElementById('nickname'),
             contentInput: document.getElementById('content'),
 
             // Buttons
             refreshBtn: document.getElementById('refresh-btn'),
-            settingsBtn: document.getElementById('settings-trigger'),
-            clearTokenBtn: document.getElementById('clear-token-btn'),
 
             toast: document.querySelector('.toast'),
         };
-
-        // Debug checks
-        if (!this.elements.settingsBtn) console.error('Settings button not found!');
-        if (!this.elements.refreshBtn) console.error('Refresh button not found!');
-    },
-
-    loadToken() {
-        const savedToken = localStorage.getItem(this.constants.TOKEN_KEY);
-        if (savedToken) {
-            this.state.token = savedToken;
-            if (this.elements.tokenInput) {
-                this.elements.tokenInput.value = savedToken;
-            }
-        }
     },
 
     bindEvents() {
@@ -75,20 +50,12 @@ const App = {
                 modal.classList.toggle('active', active);
                 if (!active && modal.querySelector('form')) {
                     modal.querySelector('form').reset();
-                    if (modal === elements.modalSettings && this.state.token) {
-                        elements.tokenInput.value = this.state.token;
-                    }
                 }
             }
         };
 
         if (elements.fab) {
             elements.fab.addEventListener('click', () => toggleModal(elements.modalWrite, true));
-        }
-
-        if (elements.settingsBtn) {
-            console.log('Binding settings click');
-            elements.settingsBtn.addEventListener('click', () => toggleModal(elements.modalSettings, true));
         }
 
         document.querySelectorAll('.close-btn, .close-trigger').forEach(btn => {
@@ -109,25 +76,8 @@ const App = {
             elements.formWrite.addEventListener('submit', (e) => this.handleSubmit(e));
         }
 
-        if (elements.formSettings) {
-            elements.formSettings.addEventListener('submit', (e) => this.handleSaveSettings(e));
-        }
-
-        if (elements.clearTokenBtn) {
-            elements.clearTokenBtn.addEventListener('click', () => this.handleClearToken());
-        }
-
         if (elements.refreshBtn) {
             elements.refreshBtn.addEventListener('click', () => this.handleRefresh());
-        }
-
-        if (elements.wallGrid) {
-            elements.wallGrid.addEventListener('click', (e) => {
-                if (e.target.closest('.reply-btn')) {
-                    const id = e.target.closest('.reply-btn').dataset.id;
-                    this.handleReply(id);
-                }
-            });
         }
     },
 
@@ -139,23 +89,33 @@ const App = {
                 if (Array.isArray(data) && data.length > 0) {
                     this.state.messages = data;
                     this.renderMessages(data, true);
-                    this.showToast('已加载缓存内容');
+                    this.showToast('已加载缓存');
                     return;
                 }
             } catch (e) { console.error(e); }
         }
-        this.handleRefresh(true);
+        // Auto refresh if config is set
+        if (CONFIG.apiUrl && CONFIG.apiUrl !== 'YOUR_WORKER_URL_HERE') {
+            this.handleRefresh(true);
+        } else {
+            this.showToast('请配置 Worker API URL');
+        }
     },
 
     async handleRefresh(force = false) {
         if (this.state.isLoading) return;
 
-        if (!this.state.token && !force) {
+        // Check Config
+        if (!CONFIG.apiUrl || CONFIG.apiUrl === 'YOUR_WORKER_URL_HERE') {
+            this.showToast('未配置 API URL');
+            return;
+        }
+
+        if (!force) {
             const lastRefresh = parseInt(localStorage.getItem(this.constants.REFRESH_KEY) || '0');
             const diff = Date.now() - lastRefresh;
             if (diff < this.constants.REFRESH_COOLDOWN) {
-                const remaining = Math.ceil((this.constants.REFRESH_COOLDOWN - diff) / 1000);
-                this.showToast(`请等待 ${remaining} 秒后再刷新`);
+                this.showToast(`刷新太快了，歇一会儿吧`);
                 return;
             }
         }
@@ -164,66 +124,28 @@ const App = {
         if (this.elements.refreshBtn) this.elements.refreshBtn.classList.add('loading', 'disabled');
 
         try {
-            const { owner, repo } = CONFIG;
-            const url = `https://api.github.com/repos/${owner}/${repo}/issues?state=open&sort=created&direction=desc&page=1&per_page=20`;
+            const res = await fetch(`${CONFIG.apiUrl}/api/messages`);
+            if (!res.ok) throw new Error('Refresh failed');
 
-            const headers = {};
-            if (this.state.token) headers['Authorization'] = `token ${this.state.token}`;
-
-            const res = await fetch(url, { headers });
-
-            if (res.status === 403 || res.status === 401) {
-                throw new Error(this.state.token ? 'Token 无效或权限不足' : '访问过于频繁，请稍后再试');
-            }
-            if (!res.ok) throw new Error('网络请求失败');
-
-            const data = await res.json();
-            const messages = data.filter(item => !item.pull_request);
+            const messages = await res.json();
 
             if (messages.length > 0) {
                 this.state.messages = messages;
                 this.saveCache(messages);
                 this.renderMessages(messages, true);
                 localStorage.setItem(this.constants.REFRESH_KEY, Date.now().toString());
-                this.showToast(this.state.token ? '已更新 (VIP模式)' : '内容已更新');
+                this.showToast('更新成功');
             } else {
                 this.renderEmpty();
             }
 
         } catch (error) {
             console.error(error);
-            this.showToast(error.message);
+            this.showToast('连接服务器失败');
         } finally {
             this.setLoading(false);
             if (this.elements.refreshBtn) this.elements.refreshBtn.classList.remove('loading', 'disabled');
         }
-    },
-
-    handleSaveSettings(e) {
-        e.preventDefault();
-        const token = this.elements.tokenInput.value.trim();
-        if (token) {
-            if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                this.showToast('Token 格式可能不正确');
-                // Allow basic validation but continue usually
-            }
-            localStorage.setItem(this.constants.TOKEN_KEY, token);
-            this.state.token = token;
-            // Close modal
-            this.elements.modalSettings.classList.remove('active');
-            this.showToast('Token 已保存，正在验证...');
-            this.handleRefresh(true);
-        } else {
-            this.showToast('请输入 Token');
-        }
-    },
-
-    handleClearToken() {
-        localStorage.removeItem(this.constants.TOKEN_KEY);
-        this.state.token = null;
-        this.elements.tokenInput.value = '';
-        this.showToast('Token 已清除');
-        this.elements.modalSettings.classList.remove('active');
     },
 
     saveCache(data) {
@@ -240,19 +162,17 @@ const App = {
             card.style.animationDelay = `${Math.random() * 0.3}s`;
 
             const date = new Date(msg.created_at).toLocaleDateString();
-            const bodyPreview = msg.body ? msg.body : '（无内容）';
+            // V5 Schema: content, nickname
+            const bodyText = msg.content || '（无内容）';
 
             card.innerHTML = `
         <div class="card-header">
           <span class="card-date">${date}</span>
-          <span class="card-id">#${msg.number}</span>
+          <span class="card-id">#${msg.id}</span>
         </div>
-        <div class="card-body">${this.escapeHtml(bodyPreview)}</div>
-        <div class="card-footer">
-          <button class="reply-btn" data-id="${msg.number}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-            回应
-          </button>
+        <div class="card-body">${this.escapeHtml(bodyText)}</div>
+        <div class="card-footer" style="padding-top:0.5rem; border:none;">
+           <span style="font-size:0.8rem; color: #888;">By ${this.escapeHtml(msg.nickname || 'Anonymous')}</span>
         </div>
       `;
             fragment.appendChild(card);
@@ -263,7 +183,7 @@ const App = {
 
     renderEmpty() {
         if (this.elements.wallGrid) {
-            this.elements.wallGrid.innerHTML = '<div class="state-box"><p>还没有人留下痕迹...</p></div>';
+            this.elements.wallGrid.innerHTML = '<div class="state-box"><p>一片荒原...</p></div>';
         }
     },
 
@@ -274,6 +194,11 @@ const App = {
     async handleSubmit(e) {
         e.preventDefault();
         if (this.state.isSubmitting) return;
+
+        if (!CONFIG.apiUrl || CONFIG.apiUrl === 'YOUR_WORKER_URL_HERE') {
+            this.showToast('请先配置 API URL');
+            return;
+        }
 
         const nickname = this.elements.nicknameInput.value || 'Anonymous';
         const content = this.elements.contentInput.value;
@@ -289,59 +214,28 @@ const App = {
         btn.textContent = '发送中...';
 
         try {
-            if (this.state.token || CONFIG.token) {
-                await this.postToGitHub(nickname, content);
-                this.showToast('发布成功！');
-                if (this.elements.modalWrite) {
-                    this.elements.modalWrite.classList.remove('active');
-                    this.elements.formWrite.reset();
-                }
-                setTimeout(() => this.handleRefresh(true), 1500);
-            } else {
-                this.redirectToGitHub(nickname, content);
+            const res = await fetch(`${CONFIG.apiUrl}/api/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nickname, content })
+            });
+
+            if (!res.ok) throw new Error('发送失败');
+
+            this.showToast('发布成功！');
+            if (this.elements.modalWrite) {
+                this.elements.modalWrite.classList.remove('active');
+                this.elements.formWrite.reset();
             }
+            setTimeout(() => this.handleRefresh(true), 500);
+
         } catch (error) {
             console.error(error);
-            this.showToast('发布失败：' + error.message);
+            this.showToast('发布失败，请重试');
         } finally {
             this.state.isSubmitting = false;
             btn.textContent = originalText;
         }
-    },
-
-    async postToGitHub(nickname, content) {
-        const { owner, repo } = CONFIG;
-        const token = this.state.token || CONFIG.token;
-
-        const title = nickname === 'Anonymous' ? '来自陌生人的留言' : `${nickname} 的留言`;
-        const body = `${content}\n\n---\n*By ${nickname} via Strangers*`;
-
-        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ title, body })
-        });
-
-        if (!res.ok) throw new Error('API 请求失败');
-    },
-
-    redirectToGitHub(nickname, content) {
-        const { owner, repo } = CONFIG;
-        const title = nickname === 'Anonymous' ? '来自陌生人的留言' : `${nickname} 的留言`;
-        const body = `${content}\n\n---\n*By ${nickname} via Strangers*`;
-        const url = `https://github.com/${owner}/${repo}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
-        window.open(url, '_blank');
-        this.showToast('正在前往 GitHub...');
-        if (this.elements.modalWrite) this.elements.modalWrite.classList.remove('active');
-    },
-
-    handleReply(id) {
-        const { owner, repo } = CONFIG;
-        window.open(`https://github.com/${owner}/${repo}/issues/${id}`, '_blank');
     },
 
     showToast(msg) {

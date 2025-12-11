@@ -20,17 +20,6 @@
 <body>
 
   <header class="container">
-    <!-- Settings Trigger (Top Right) -->
-    <button id="settings-trigger" class="settings-trigger" aria-label="设置">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="3"></circle>
-        <path
-          d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1.82 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-        </path>
-      </svg>
-    </button>
-
     <h1>Strangers</h1>
     <p>在这里，我们都是过客。留下你的声音，或者倾听别人的故事。</p>
 
@@ -73,29 +62,6 @@
         <div class="form-actions">
           <button type="button" class="btn btn-secondary close-trigger" data-target="modal-write">取消</button>
           <button type="submit" class="btn btn-primary">发布</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Settings Modal -->
-  <div id="modal-settings" class="modal-overlay">
-    <div class="modal">
-      <button class="close-btn" data-target="modal-settings">&times;</button>
-      <h2>设置</h2>
-      <p class="modal-desc">
-        配置 GitHub 个人访问令牌 (Token) 以解锁<b>无限刷新</b>和<b>直接发布</b>功能。
-        <br>
-        <small>Token 仅保存在您的浏览器本地，不会上传。</small>
-      </p>
-      <form class="modal-form" id="form-settings">
-        <div class="form-group">
-          <label for="token-input">GitHub Token</label>
-          <input type="password" id="token-input" class="form-input" placeholder="ghp_xxxxxxxxxxxx" autocomplete="off">
-        </div>
-        <div class="form-actions">
-          <button type="button" id="clear-token-btn" class="btn btn-danger-outline">清除 Token</button>
-          <button type="submit" class="btn btn-primary">保存</button>
         </div>
       </form>
     </div>
