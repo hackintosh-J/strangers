@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>温暖墙 | Warm Wall</title>
+  <link rel="stylesheet" href="styles/theme.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__content">
+      <p class="hero__eyebrow" data-i18n="eyebrow">温暖墙</p>
+      <h1 class="hero__title" data-i18n="welcome">欢迎来到温暖墙</h1>
+      <p class="hero__lede" data-i18n="lede">在这里写下你的心情，接住别人递来的温暖。</p>
+      <div class="hero__actions">
+        <button id="language-toggle" class="button button--ghost" type="button">English</button>
+        <button id="theme-toggle" class="button" type="button" data-i18n="toggleTheme">切换主题</button>
+        <button id="export-button" class="button button--ghost" type="button" data-i18n="export">导出数据</button>
+      </div>
+      <p class="hero__hint" data-i18n="anonNote">留言自动匿名显示，请放心分享你的故事。</p>
+    </div>
+    <div class="hero__art">
+      <img src="assets/illustration.svg" alt="柔和插画" class="hero__image">
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel" aria-labelledby="panel-wall">
+      <div class="panel__header">
+        <div>
+          <p class="panel__eyebrow" data-i18n="wallLabel">温暖墙列表</p>
+          <h2 id="panel-wall" class="panel__title" data-i18n="recent">最新留言</h2>
+        </div>
+        <div class="panel__meta" id="scroll-status" data-i18n="scrollPrompt">向下滚动查看更多留言</div>
+      </div>
+      <ul id="warm-wall" class="wall"></ul>
+    </section>
+
+    <section class="panel" aria-labelledby="panel-entry">
+      <div class="panel__header">
+        <div>
+          <p class="panel__eyebrow" data-i18n="entryLabel">留言入口</p>
+          <h2 id="panel-entry" class="panel__title" data-i18n="share">写下你的心情</h2>
+        </div>
+      </div>
+      <form id="entry-form" class="form" novalidate>
+        <label class="form__field">
+          <span class="form__label" data-i18n="messageLabel">留言</span>
+          <textarea id="message" name="message" rows="4" placeholder="想说什么都可以" required></textarea>
+        </label>
+        <label class="form__field">
+          <span class="form__label" data-i18n="tagLabel">想要留下的称呼（可为空）</span>
+          <input id="author" name="author" type="text" placeholder="匿名">
+        </label>
+        <div class="form__actions">
+          <button type="submit" class="button" data-i18n="submit">发布</button>
+          <p class="form__note" data-i18n="anonNote">留言自动匿名显示，请放心分享你的故事。</p>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="scripts/main.js"></script>
+</body>
+</html>
