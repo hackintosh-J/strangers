@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
@@ -47,46 +47,48 @@ export default function Profile() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-20">
-            <Navbar />
-            <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-2xl shadow-sm border border-gray-100">
-                <h1 className="text-2xl font-bold mb-2 text-gray-800">个人资料</h1>
-                <p className="text-gray-500 mb-6">当前用户: <span className="font-semibold text-gray-800">{user.username}</span></p>
+        <div className="flex min-h-screen bg-paper">
+            <Sidebar />
+            <main className="flex-1 p-8 flex items-center justify-center">
+                <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-sm border border-warm-100">
+                    <h1 className="text-2xl font-bold mb-2 text-gray-800">个人资料</h1>
+                    <p className="text-gray-500 mb-6">当前用户: <span className="font-semibold text-gray-800">{user.username}</span></p>
 
-                <div className="border-t border-gray-100 pt-6">
-                    <h2 className="text-lg font-medium mb-4">修改密码</h2>
-                    {message.text && (
-                        <div className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                            {message.text}
-                        </div>
-                    )}
-                    <form onSubmit={handleUpdatePassword} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={e => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                required
-                            />
-                        </div>
-                        <button type="submit" className="w-full py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
-                            更新密码
-                        </button>
-                    </form>
+                    <div className="border-t border-gray-100 pt-6">
+                        <h2 className="text-lg font-medium mb-4">修改密码</h2>
+                        {message.text && (
+                            <div className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                {message.text}
+                            </div>
+                        )}
+                        <form onSubmit={handleUpdatePassword} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={e => setConfirmPassword(e.target.value)}
+                                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required
+                                />
+                            </div>
+                            <button type="submit" className="w-full py-2.5 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors">
+                                更新密码
+                            </button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

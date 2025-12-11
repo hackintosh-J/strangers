@@ -1,13 +1,13 @@
 import React from 'react';
-import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
 import { Heart } from 'lucide-react';
 
 export default function About() {
     return (
-        <div className="min-h-screen pt-24 pb-20 bg-paper">
-            <Navbar />
+        <div className="flex min-h-screen bg-paper">
+            <Sidebar />
 
-            <main className="max-w-2xl mx-auto px-6">
+            <main className="flex-1 max-w-4xl mx-auto px-6 py-20">
                 <div className="mb-8 text-center">
                     <a href="/" className="text-warm-400 hover:text-warm-600 text-sm font-serif border-b border-transparent hover:border-warm-400 transition-all">
                         ← 返回主页
