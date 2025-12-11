@@ -16,7 +16,7 @@ export default function Dashboard() {
 
     const ChannelCard = ({ channel }) => (
         <Link to={`/channel/${channel.slug}`} className="block group">
-            <div className="bg-white rounded-2xl p-6 border border-oat-200 shadow-soft func-hover transition-all h-full flex flex-col items-center text-center">
+            <div className="bg-white rounded-2xl p-6 border border-oat-200 shadow-soft transition-all h-full flex flex-col items-center text-center hover:shadow-float">
                 <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 transform grayscale group-hover:grayscale-0">
                     {channel.icon}
                 </div>

@@ -73,12 +73,12 @@ export default function ChannelFeed() {
         <div className="flex min-h-screen bg-paper">
             <Sidebar />
 
-            <main className="flex-1 md:ml-0 w-full max-w-4xl mx-auto border-x border-warm-100 min-h-screen bg-white shadow-sm">
+            <main className="flex-1 md:ml-0 w-full max-w-4xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft pb-24 md:pb-0">
                 {/* Header */}
-                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-warm-100 p-6 flex justify-between items-center">
+                <div className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-oat-200 p-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-serif font-bold text-ink">{info.name}</h1>
-                        <p className="text-sm text-pencil mt-1">{info.desc}</p>
+                        <p className="text-sm text-oat-400 mt-1">{info.desc}</p>
                     </div>
 
                     <button
@@ -92,43 +92,43 @@ export default function ChannelFeed() {
 
                 {/* Posting Modal / Area */}
                 {isPosting && (
-                    <div className="p-6 bg-warm-50 border-b border-warm-100 animate-slide-up">
+                    <div className="p-6 bg-oat-50 border-b border-oat-200 animate-slide-up">
                         <input
-                            className="w-full bg-transparent text-lg font-bold placeholder-warm-300 border-none outline-none mb-4 font-serif"
+                            className="w-full bg-transparent text-lg font-bold placeholder-oat-400 border-none outline-none mb-4 font-serif"
                             placeholder="标题 (可选)..."
                             value={newTitle}
                             onChange={e => setNewTitle(e.target.value)}
                         />
                         <textarea
-                            className="w-full bg-transparent min-h-[150px] outline-none text-ink placeholder-warm-300 resize-none leading-relaxed"
+                            className="w-full bg-transparent min-h-[150px] outline-none text-ink placeholder-oat-400 resize-none leading-relaxed"
                             placeholder="写下你的心事..."
                             value={newContent}
                             onChange={e => setNewContent(e.target.value)}
                         />
                         <div className="flex justify-end gap-3 mt-4">
-                            <button onClick={() => setIsPosting(false)} className="text-pencil text-sm hover:text-ink">取消</button>
+                            <button onClick={() => setIsPosting(false)} className="text-oat-500 text-sm hover:text-ink">取消</button>
                             <button onClick={handlePost} className="btn-primary text-sm py-1.5 px-4">发布</button>
                         </div>
                     </div>
                 )}
 
                 {/* List */}
-                <div className="divide-y divide-warm-50">
+                <div className="divide-y divide-oat-100">
                     {posts.map(post => (
                         <PostListItem key={post.id} post={post} />
                     ))}
 
-                    {loading && <div className="p-8 text-center text-warm-300 text-sm">加载中...</div>}
+                    {loading && <div className="p-8 text-center text-oat-400 text-sm">加载中...</div>}
 
                     {!loading && posts.length === 0 && (
-                        <div className="p-12 text-center text-warm-300">
+                        <div className="p-12 text-center text-oat-400">
                             这里还很安静...来写下第一篇故事吧。
                         </div>
                     )}
 
                     {nextCursor && !loading && (
                         <div className="p-6 text-center">
-                            <button onClick={() => fetchPosts(nextCursor)} className="text-warm-400 hover:text-warm-600 font-medium text-sm">
+                            <button onClick={() => fetchPosts(nextCursor)} className="text-haze-400 hover:text-haze-600 font-medium text-sm">
                                 加载更多
                             </button>
                         </div>
