@@ -5,9 +5,10 @@ import { Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Admin() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
+    const API_URL = import.meta.env.VITE_API_URL || '';
 
     useEffect(() => {
         if (!user || user.role !== 'admin') {
@@ -18,22 +19,28 @@ export default function Admin() {
     }, [user]);
 
     const fetchMessages = async () => {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/api/messages`);
-        if (res.ok) setMessages(await res.json());
+        try {
+            const res = await fetch(`${API_URL}/api/messages`);
+            if (res.ok) setMessages(await res.json());
+        } catch (e) { console.error(e); }
     };
 
     const handleDelete = async (id) => {
         if (!confirm('确认删除?')) return;
-        // Call API DELETE
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/api/messages/${id}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' } // Add Auth header here
-        });
-        if (res.ok || res.status === 404) { // Treat 404 as success (already gone)
-            setMessages(messages.filter(m => m.id !== id));
-        } else {
-            alert('删除失败');
-        }
+        try {
+            const res = await fetch(`${API_URL}/api/messages/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                setMessages(messages.filter(m => m.id !== id));
+            } else {
+                alert('删除失败: 无权限');
+            }
+        } catch (e) { alert('Error'); }
     };
 
     return (

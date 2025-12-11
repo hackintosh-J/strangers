@@ -4,10 +4,11 @@ import { useAuth } from '../hooks/useAuth';
 import { Send, Heart, MessageCircle } from 'lucide-react';
 
 export default function Home() {
-    const { user } = useAuth();
+    const { user, token } = useAuth();
     const [messages, setMessages] = useState([]);
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const API_URL = import.meta.env.VITE_API_URL || '';
 
     useEffect(() => {
         fetchMessages();
@@ -16,7 +17,7 @@ export default function Home() {
     const fetchMessages = async () => {
         try {
             // In dev with Vite proxy or full URL
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/api/messages`);
+            const res = await fetch(`${API_URL}/api/messages`);
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data);
@@ -29,13 +30,20 @@ export default function Home() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!content.trim()) return;
+        if (!user) {
+            alert('请先登录');
+            return;
+        }
 
         setIsSubmitting(true);
         try {
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8787'}/api/messages`, {
+            const res = await fetch(`${API_URL}/api/messages`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content, nickname: user?.username, user_id: user?.id })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ content, nickname: user.username })
             });
             if (res.ok) {
                 setContent('');
