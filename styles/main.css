@@ -50,7 +50,7 @@ body::before {
   width: 200%;
   height: 200%;
   background: radial-gradient(circle at 50% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
-              radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.08) 0%, transparent 40%);
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.08) 0%, transparent 40%);
   z-index: -1;
   pointer-events: none;
 }
@@ -79,12 +79,49 @@ h1 {
   margin-bottom: 0.5rem;
 }
 
+
 header p {
   color: var(--text-secondary);
   font-size: 1.1rem;
   max-width: 600px;
   margin: 0 auto;
 }
+
+.refresh-btn {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.refresh-btn:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+.refresh-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.refresh-btn svg {
+  transition: transform 0.5s;
+}
+
+.refresh-btn.loading svg {
+  animation: spin 1s linear infinite;
+}
+
 
 /* Grid Layout */
 .wall-grid {
@@ -270,7 +307,8 @@ header p {
   color: var(--text-secondary);
 }
 
-.form-input, .form-textarea {
+.form-input,
+.form-textarea {
   font-family: var(--font-sans);
   background: transparent;
   border: 1px solid var(--text-secondary);
@@ -281,7 +319,8 @@ header p {
   transition: border-color 0.2s;
 }
 
-.form-input:focus, .form-textarea:focus {
+.form-input:focus,
+.form-textarea:focus {
   outline: none;
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
@@ -370,15 +409,31 @@ header p {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
