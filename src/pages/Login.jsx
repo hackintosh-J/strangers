@@ -79,6 +79,7 @@ export default function Login() {
                             {isRegister ? '已有账号？去登录' : '还没有账号？去注册'}
                         </button>
                     </div>
+                </div>
             </main>
         </div>
     );
