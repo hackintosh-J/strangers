@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>温暖墙 | strangers</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --subtle: #475569;
+      --primary: #f472b6;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 24px 16px;
+      text-align: center;
+      background: linear-gradient(120deg, #fef2f2, #e0f2fe);
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .description {
+      margin: 0;
+      color: var(--subtle);
+    }
+
+    main {
+      max-width: 960px;
+      margin: 24px auto 48px;
+      padding: 0 16px;
+    }
+
+    .warm-wall {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+    }
+
+    .warm-wall__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .warm-wall__title {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    #warm-wall-status {
+      color: var(--subtle);
+      font-size: 14px;
+    }
+
+    .warm-card {
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: #fff;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    .warm-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .warm-card__header {
+      margin-bottom: 8px;
+    }
+
+    .warm-card__title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .warm-card__meta {
+      color: var(--subtle);
+      font-size: 13px;
+    }
+
+    .warm-card__body {
+      margin: 8px 0 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .warm-card__labels {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .warm-card__label {
+      background: #fdf2f8;
+      color: #be185d;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid #f9a8d4;
+    }
+
+    #load-more {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(120deg, #fb7185, #f472b6);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: filter 120ms ease, transform 120ms ease;
+    }
+
+    #load-more:hover:not(:disabled) {
+      filter: brightness(1.05);
+      transform: translateY(-1px);
+    }
+
+    #load-more:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>温暖墙</h1>
+    <p class="description">从 GitHub Issues/Discussions 收集鼓励与倾听的留言，与你一起感受温度。</p>
+  </header>
+
+  <main>
+    <section id="warm-wall" class="warm-wall">
+      <div class="warm-wall__header">
+        <h2 class="warm-wall__title">社区留言</h2>
+        <span id="warm-wall-status" aria-live="polite"></span>
+      </div>
+      <div id="warm-wall-list"></div>
+      <button id="load-more" type="button">加载更多</button>
+    </section>
+  </main>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
