@@ -4,41 +4,77 @@
 
 @layer base {
     body {
-        @apply antialiased text-ink bg-paper font-sans selection:bg-warm-200 selection:text-ink;
-        background-image: radial-gradient(#E3EBE3 1px, transparent 1px);
-        background-size: 24px 24px;
+        @apply antialiased text-ink bg-oat-50 font-sans tracking-wide selection:bg-haze-200 selection:text-haze-900;
     }
 
-    /* Healing Typography */
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-        @apply font-serif tracking-wide text-ink;
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
     }
 
-    .font-hand {
-        font-family: 'Ma Shan Zheng', cursive;
+    ::-webkit-scrollbar-track {
+        @apply bg-transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-oat-300 rounded-full hover:bg-oat-400 transition-colors;
     }
 }
 
 @layer components {
+
+    /* Premium Card */
+    .card {
+        @apply bg-white rounded-2xl border border-oat-100 shadow-soft transition-all duration-300 hover:shadow-float;
+    }
+
+    /* Buttons */
     .btn-primary {
-        @apply px-6 py-2 bg-warm-500 text-white rounded-full font-medium shadow-sm hover:bg-warm-600 hover:shadow-md transition-all active:scale-95;
+        @apply bg-haze-500 text-white font-medium rounded-xl hover:bg-haze-600 active:scale-95 transition-all shadow-sm shadow-haze-200/50 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
     }
 
     .btn-ghost {
-        @apply p-2 text-pencil hover:text-warm-600 hover:bg-warm-50 rounded-full transition-all;
+        @apply text-haze-600 hover:bg-haze-50 hover:text-haze-700 rounded-xl transition-colors font-medium;
     }
 
-    .card {
-        @apply bg-card rounded-2xl border border-warm-100;
-        box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+    .btn-icon {
+        @apply p-2 rounded-full text-oat-400 hover:bg-oat-100 hover:text-haze-600 transition-colors;
     }
 
-    .input-warm {
-        @apply w-full px-4 py-3 rounded-xl bg-white border border-warm-200 text-ink focus:outline-none focus:border-warm-400 focus:ring-4 focus:ring-warm-100 transition-all;
+    /* Inputs */
+    .input-morandi {
+        @apply w-full px-4 py-3 rounded-xl bg-white border border-oat-200 text-ink placeholder-oat-400 focus:outline-none focus:border-haze-400 focus:ring-4 focus:ring-haze-50 transition-all font-sans;
+    }
+
+    /* Animations */
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+
+    .animate-slide-up {
+        animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 }
