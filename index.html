@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>陪伴角落</title>
+  <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+  <header class="page-header">
+    <div class="container">
+      <h1>陪伴角落</h1>
+      <p>为忙碌的你准备一点呼吸、暖心和小确幸的陪伴。</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card-grid">
+      <article class="card" id="warmth-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <p class="card-kicker">暖心瞬间</p>
+            <h2>随机句子</h2>
+          </div>
+          <button class="ghost-button" id="refresh-warmth" type="button">换一句</button>
+        </div>
+        <p class="muted" id="warmth-text">准备一段温暖的话送给你……</p>
+      </article>
+
+      <article class="card" id="breath-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <p class="card-kicker">节奏陪练</p>
+            <h2>呼吸练习</h2>
+          </div>
+        </div>
+        <p class="muted">跟随提示完成 4-4-4-4 的方块呼吸。</p>
+        <div class="breath-display" id="breath-display">点击开始试试看</div>
+        <button class="primary" id="start-breath" type="button">开始呼吸练习</button>
+      </article>
+
+      <article class="card" id="playlist-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <p class="card-kicker">柔和律动</p>
+            <h2>随机音乐播放列表</h2>
+          </div>
+          <button class="ghost-button" id="refresh-playlist" type="button">换一组</button>
+        </div>
+        <p class="muted">在安静的背景音乐里，让心慢下来。</p>
+        <ul class="pill-list" id="playlist-list"></ul>
+      </article>
+
+      <article class="card" id="tinyjoy-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <p class="card-kicker">三件小确幸</p>
+            <h2>记录让你微笑的事</h2>
+          </div>
+        </div>
+        <p class="muted">写下今天让你心情变好的三件小事，随时回看。</p>
+        <ul class="joy-list" id="joy-list"></ul>
+        <form id="joy-form" class="joy-form">
+          <label class="sr-only" for="joy-input">添加小确幸</label>
+          <input id="joy-input" name="joy" type="text" placeholder="例如：午后的阳光很温柔" maxlength="80" required>
+          <button class="primary" type="submit">记录</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <script src="scripts/tools.js"></script>
+</body>
+</html>
