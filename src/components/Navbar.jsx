@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { LogIn, LogOut, User } from 'lucide-react';
+import { LogIn, LogOut, User, Shield } from 'lucide-react';
 
 export default function Navbar() {
     const { user, logout } = useAuth();
@@ -16,6 +16,11 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
                     {user ? (
                         <>
+                            {user.role === 'admin' && (
+                                <Link to="/admin" className="p-2 hover:bg-gray-100 rounded-full text-indigo-600" title="管理面板">
+                                    <Shield size={20} />
+                                </Link>
+                            )}
                             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                                 <User size={18} />
                                 <span>{user.username}</span>

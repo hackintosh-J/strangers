@@ -70,41 +70,97 @@ app.post('/api/auth/login', async (c) => {
 
 // --- Public Posts Routes ---
 app.get('/api/messages', async (c) => {
-    const { results } = await c.env.DB.prepare(
-        `SELECT m.*, u.username, 
-     (SELECT COUNT(*) FROM comments WHERE message_id = m.id) as comment_count,
-     (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count
-     FROM messages m 
-     LEFT JOIN users u ON m.user_id = u.id 
-     ORDER BY m.created_at DESC LIMIT 50`
-    ).all();
-    return c.json(results);
+    try {
+        const { results } = await c.env.DB.prepare(
+            `SELECT m.*, u.username, 
+       (SELECT COUNT(*) FROM comments WHERE message_id = m.id) as comment_count,
+       (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count
+       FROM messages m 
+       LEFT JOIN users u ON m.user_id = u.id 
+       ORDER BY m.created_at DESC LIMIT 50`
+        ).all();
+        return c.json(results);
+    } catch (e) {
+        return c.json({ error: e.message, stack: e.stack }, 500);
+    }
 });
 
 // --- Protected Post Routes ---
 app.post('/api/messages', authMiddleware, async (c) => {
-    const { content, nickname } = await c.req.json();
-    const user = c.get('jwtPayload');
+    try {
+        const { content, nickname } = await c.req.json();
+        const user = c.get('jwtPayload');
 
-    if (!content) return c.json({ error: 'Content required' }, 400);
+        if (!content) return c.json({ error: 'Content required' }, 400);
 
-    const res = await c.env.DB.prepare(
-        'INSERT INTO messages (content, nickname, user_id) VALUES (?, ?, ?)'
-    ).bind(content, nickname || user.username, user.id).run();
+        const res = await c.env.DB.prepare(
+            'INSERT INTO messages (content, nickname, user_id) VALUES (?, ?, ?)'
+        ).bind(content, nickname || user.username, user.id).run();
 
-    return c.json({ success: true, id: res.meta.last_row_id });
+        return c.json({ success: true, id: res.meta.last_row_id });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
 });
 
 app.delete('/api/messages/:id', authMiddleware, async (c) => {
     const id = c.req.param('id');
     const user = c.get('jwtPayload');
 
-    // Check valid admin
-    if (user.role !== 'admin') {
+    const msg = await c.env.DB.prepare('SELECT user_id FROM messages WHERE id = ?').bind(id).first();
+    if (!msg) return c.json({ error: 'Not found' }, 404);
+
+    // Allow if Admin OR Owner
+    if (user.role !== 'admin' && msg.user_id !== user.id) {
         return c.json({ error: 'Forbidden' }, 403);
     }
 
     await c.env.DB.prepare('DELETE FROM messages WHERE id = ?').bind(id).run();
+    return c.json({ success: true });
+});
+
+// --- Likes & Comments ---
+
+app.post('/api/messages/:id/like', authMiddleware, async (c) => {
+    const messageId = c.req.param('id');
+    const user = c.get('jwtPayload');
+
+    const existing = await c.env.DB.prepare(
+        "SELECT id FROM likes WHERE target_type = 'message' AND target_id = ? AND user_id = ?"
+    ).bind(messageId, user.id).first();
+
+    if (existing) {
+        await c.env.DB.prepare("DELETE FROM likes WHERE id = ?").bind(existing.id).run();
+        return c.json({ liked: false });
+    } else {
+        await c.env.DB.prepare(
+            "INSERT INTO likes (target_type, target_id, user_id) VALUES ('message', ?, ?)"
+        ).bind(messageId, user.id).run();
+        return c.json({ liked: true });
+    }
+});
+
+app.get('/api/messages/:id/comments', async (c) => {
+    const id = c.req.param('id');
+    const { results } = await c.env.DB.prepare(
+        `SELECT c.*, u.username FROM comments c 
+         LEFT JOIN users u ON c.user_id = u.id 
+         WHERE message_id = ? ORDER BY c.created_at ASC`
+    ).bind(id).all();
+    return c.json(results);
+});
+
+app.post('/api/messages/:id/comments', authMiddleware, async (c) => {
+    const id = c.req.param('id');
+    const user = c.get('jwtPayload');
+    const { content } = await c.req.json();
+
+    if (!content) return c.json({ error: 'Content empty' }, 400);
+
+    await c.env.DB.prepare(
+        "INSERT INTO comments (message_id, user_id, content) VALUES (?, ?, ?)"
+    ).bind(id, user.id, content).run();
+
     return c.json({ success: true });
 });
 
