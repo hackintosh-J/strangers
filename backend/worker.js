@@ -170,6 +170,86 @@ app.put('/api/users/:id/password', authMiddleware, async (c) => {
     return c.json({ success: true });
 });
 
+// --- Community V3 APIs (Channels) ---
+
+app.get('/api/channels', async (c) => {
+    try {
+        const { results } = await c.env.DB.prepare("SELECT * FROM channels ORDER BY id ASC").all();
+        return c.json(results);
+    } catch (e) { return c.json({ error: e.message }, 500); }
+});
+
+// Get Messages by Channel (List View - No full content)
+app.get('/api/channels/:slug/messages', async (c) => {
+    try {
+        const slug = c.req.param('slug');
+        const { cursor, limit = 20 } = c.req.query();
+
+        // 1. Get Channel ID
+        const channel = await c.env.DB.prepare("SELECT id FROM channels WHERE slug = ?").bind(slug).first();
+        if (!channel) return c.json({ error: 'Channel not found' }, 404);
+
+        let query = `SELECT m.id, m.title, m.user_id, m.nickname, m.created_at, m.view_count,
+       (SELECT COUNT(*) FROM comments WHERE message_id = m.id) as comment_count,
+       (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count,
+       substr(m.content, 1, 100) as summary -- Only fetch summary
+       FROM messages m 
+       WHERE channel_id = ?`;
+
+        let params = [channel.id];
+        if (cursor) {
+            query += ` AND m.id < ?`;
+            params.push(cursor);
+        }
+
+        query += ` ORDER BY m.created_at DESC, m.id DESC LIMIT ?`;
+        params.push(parseInt(limit));
+
+        const { results } = await c.env.DB.prepare(query).bind(...params).all();
+
+        return c.json({
+            data: results,
+            next_cursor: results.length > 0 ? results[results.length - 1].id : null
+        });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
+// Get Single Message Detail (Full Content + Comments)
+app.get('/api/messages/:id', async (c) => {
+    try {
+        const id = c.req.param('id');
+
+        // Fetch Message
+        const msg = await c.env.DB.prepare(
+            `SELECT m.*, u.username, c.name as channel_name, c.slug as channel_slug
+             FROM messages m
+             LEFT JOIN users u ON m.user_id = u.id
+             LEFT JOIN channels c ON m.channel_id = c.id
+             WHERE m.id = ?`
+        ).bind(id).first();
+
+        if (!msg) return c.json({ error: 'Not found' }, 404);
+
+        // Increment View Count (Fire and forget)
+        c.executionCtx.waitUntil(
+            c.env.DB.prepare("UPDATE messages SET view_count = view_count + 1 WHERE id = ?").bind(id).run()
+        );
+
+        // Fetch Comments (No pagination for now, simplify)
+        const { results: comments } = await c.env.DB.prepare(
+            `SELECT c.*, u.username FROM comments c 
+             LEFT JOIN users u ON c.user_id = u.id 
+             WHERE message_id = ? ORDER BY c.created_at ASC`
+        ).bind(id).all();
+
+        return c.json({ message: msg, comments });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
 // --- Public Posts Routes ---
 app.get('/api/messages', async (c) => {
     try {
@@ -222,17 +302,24 @@ app.delete('/api/comments/:id', authMiddleware, async (c) => {
 // ... (Original comment posting routes)
 
 
-// --- Protected Post Routes ---
+// --- Protected Post Routes (Updated for V3) ---
 app.post('/api/messages', authMiddleware, async (c) => {
     try {
-        const { content, nickname } = await c.req.json();
+        const { content, title, channel_slug, nickname } = await c.req.json();
         const user = c.get('jwtPayload');
 
         if (!content) return c.json({ error: 'Content required' }, 400);
 
+        // Resolve Channel
+        let channelId = 1; // Default
+        if (channel_slug) {
+            const ch = await c.env.DB.prepare("SELECT id FROM channels WHERE slug = ?").bind(channel_slug).first();
+            if (ch) channelId = ch.id;
+        }
+
         const res = await c.env.DB.prepare(
-            'INSERT INTO messages (content, nickname, user_id) VALUES (?, ?, ?)'
-        ).bind(content, nickname || user.username, user.id).run();
+            'INSERT INTO messages (content, title, channel_id, nickname, user_id) VALUES (?, ?, ?, ?, ?)'
+        ).bind(content, title || null, channelId, nickname || user.username, user.id).run();
 
         return c.json({ success: true, id: res.meta.last_row_id });
     } catch (e) {
