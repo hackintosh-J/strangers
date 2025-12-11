@@ -34,7 +34,8 @@
     }
 
     .card {
-        @apply bg-card rounded-2xl shadow-[0_2px_15px_-3px_rgba(0, 0, 0, 0.05)] border border-warm-100;
+        @apply bg-card rounded-2xl border border-warm-100;
+        box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
     }
 
     .input-warm {
