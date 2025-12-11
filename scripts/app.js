@@ -6,7 +6,7 @@ const App = {
         isLoading: false,
         hasMore: true,
         isSubmitting: false,
-        token: null, // User provided token
+        token: null,
     },
 
     constants: {
@@ -16,35 +16,45 @@ const App = {
         REFRESH_COOLDOWN: 60 * 1000,
     },
 
-    elements: {
-        wallGrid: document.querySelector('.wall-grid'),
-        fab: document.querySelector('.fab'),
-
-        // Modals
-        modalWrite: document.getElementById('modal-write'),
-        modalSettings: document.getElementById('modal-settings'),
-
-        // Forms
-        formWrite: document.getElementById('form-write'),
-        formSettings: document.getElementById('form-settings'),
-
-        // Inputs
-        tokenInput: document.getElementById('token-input'),
-        nicknameInput: document.getElementById('nickname'),
-        contentInput: document.getElementById('content'),
-
-        // Buttons
-        refreshBtn: document.getElementById('refresh-btn'),
-        settingsBtn: document.getElementById('settings-trigger'),
-        clearTokenBtn: document.getElementById('clear-token-btn'),
-
-        toast: document.querySelector('.toast'),
-    },
+    elements: {}, // Init in initElements
 
     init() {
+        console.log('App initializing...');
+        this.initElements();
         this.loadToken();
         this.bindEvents();
         this.loadInitialData();
+    },
+
+    initElements() {
+        this.elements = {
+            wallGrid: document.querySelector('.wall-grid'),
+            fab: document.querySelector('.fab'),
+
+            // Modals
+            modalWrite: document.getElementById('modal-write'),
+            modalSettings: document.getElementById('modal-settings'),
+
+            // Forms
+            formWrite: document.getElementById('form-write'),
+            formSettings: document.getElementById('form-settings'),
+
+            // Inputs
+            tokenInput: document.getElementById('token-input'),
+            nicknameInput: document.getElementById('nickname'),
+            contentInput: document.getElementById('content'),
+
+            // Buttons
+            refreshBtn: document.getElementById('refresh-btn'),
+            settingsBtn: document.getElementById('settings-trigger'),
+            clearTokenBtn: document.getElementById('clear-token-btn'),
+
+            toast: document.querySelector('.toast'),
+        };
+
+        // Debug checks
+        if (!this.elements.settingsBtn) console.error('Settings button not found!');
+        if (!this.elements.refreshBtn) console.error('Refresh button not found!');
     },
 
     loadToken() {
@@ -60,13 +70,11 @@ const App = {
     bindEvents() {
         const { elements } = this;
 
-        // Helper: Modal toggling
         const toggleModal = (modal, active) => {
             if (modal) {
                 modal.classList.toggle('active', active);
                 if (!active && modal.querySelector('form')) {
                     modal.querySelector('form').reset();
-                    // Restore token input value if closing settings
                     if (modal === elements.modalSettings && this.state.token) {
                         elements.tokenInput.value = this.state.token;
                     }
@@ -74,16 +82,15 @@ const App = {
             }
         };
 
-        // Open/Close triggers
         if (elements.fab) {
             elements.fab.addEventListener('click', () => toggleModal(elements.modalWrite, true));
         }
 
         if (elements.settingsBtn) {
+            console.log('Binding settings click');
             elements.settingsBtn.addEventListener('click', () => toggleModal(elements.modalSettings, true));
         }
 
-        // Generic Close Buttons
         document.querySelectorAll('.close-btn, .close-trigger').forEach(btn => {
             btn.addEventListener('click', () => {
                 const targetId = btn.dataset.target;
@@ -92,14 +99,12 @@ const App = {
             });
         });
 
-        // Close on overlay click
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) toggleModal(overlay, false);
             });
         });
 
-        // Forms
         if (elements.formWrite) {
             elements.formWrite.addEventListener('submit', (e) => this.handleSubmit(e));
         }
@@ -112,12 +117,10 @@ const App = {
             elements.clearTokenBtn.addEventListener('click', () => this.handleClearToken());
         }
 
-        // Refresh Button (Fix: Check existence)
         if (elements.refreshBtn) {
             elements.refreshBtn.addEventListener('click', () => this.handleRefresh());
         }
 
-        // Reply delegation
         if (elements.wallGrid) {
             elements.wallGrid.addEventListener('click', (e) => {
                 if (e.target.closest('.reply-btn')) {
@@ -129,7 +132,6 @@ const App = {
     },
 
     loadInitialData() {
-        // Try to load from cache first
         const cached = localStorage.getItem(this.constants.CACHE_KEY);
         if (cached) {
             try {
@@ -140,25 +142,17 @@ const App = {
                     this.showToast('已加载缓存内容');
                     return;
                 }
-            } catch (e) {
-                console.error('Cache parse error', e);
-            }
+            } catch (e) { console.error(e); }
         }
-
-        // If no cache, fetch fresh data
         this.handleRefresh(true);
     },
 
     async handleRefresh(force = false) {
         if (this.state.isLoading) return;
 
-        // Rate Limit Logic:
-        // If NO token present, enforce cooldown.
-        // If token present, ignore cooldown (Unlimited Refresh).
         if (!this.state.token && !force) {
             const lastRefresh = parseInt(localStorage.getItem(this.constants.REFRESH_KEY) || '0');
             const diff = Date.now() - lastRefresh;
-
             if (diff < this.constants.REFRESH_COOLDOWN) {
                 const remaining = Math.ceil((this.constants.REFRESH_COOLDOWN - diff) / 1000);
                 this.showToast(`请等待 ${remaining} 秒后再刷新`);
@@ -167,29 +161,19 @@ const App = {
         }
 
         this.setLoading(true);
-        if (this.elements.refreshBtn) {
-            this.elements.refreshBtn.classList.add('loading', 'disabled');
-        }
+        if (this.elements.refreshBtn) this.elements.refreshBtn.classList.add('loading', 'disabled');
 
         try {
-            // Use configured repo logic
             const { owner, repo } = CONFIG;
-            // Fetch fresh data
             const url = `https://api.github.com/repos/${owner}/${repo}/issues?state=open&sort=created&direction=desc&page=1&per_page=20`;
 
             const headers = {};
-            if (this.state.token) {
-                headers['Authorization'] = `token ${this.state.token}`;
-            }
+            if (this.state.token) headers['Authorization'] = `token ${this.state.token}`;
 
             const res = await fetch(url, { headers });
 
             if (res.status === 403 || res.status === 401) {
-                if (this.state.token) {
-                    throw new Error('Token 无效或权限不足');
-                } else {
-                    throw new Error('访问过于频繁，请稍后再试');
-                }
+                throw new Error(this.state.token ? 'Token 无效或权限不足' : '访问过于频繁，请稍后再试');
             }
             if (!res.ok) throw new Error('网络请求失败');
 
@@ -200,9 +184,8 @@ const App = {
                 this.state.messages = messages;
                 this.saveCache(messages);
                 this.renderMessages(messages, true);
-
                 localStorage.setItem(this.constants.REFRESH_KEY, Date.now().toString());
-                this.showToast(this.state.token ? '已更新 (无限极速版)' : '内容已更新');
+                this.showToast(this.state.token ? '已更新 (VIP模式)' : '内容已更新');
             } else {
                 this.renderEmpty();
             }
@@ -212,9 +195,7 @@ const App = {
             this.showToast(error.message);
         } finally {
             this.setLoading(false);
-            if (this.elements.refreshBtn) {
-                this.elements.refreshBtn.classList.remove('loading', 'disabled');
-            }
+            if (this.elements.refreshBtn) this.elements.refreshBtn.classList.remove('loading', 'disabled');
         }
     },
 
@@ -223,17 +204,17 @@ const App = {
         const token = this.elements.tokenInput.value.trim();
         if (token) {
             if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
-                this.showToast('Token 格式看起来不太对，请检查');
-                return;
+                this.showToast('Token 格式可能不正确');
+                // Allow basic validation but continue usually
             }
             localStorage.setItem(this.constants.TOKEN_KEY, token);
             this.state.token = token;
-            this.showToast('Token 已保存！现在您可以无限刷新了');
+            // Close modal
             this.elements.modalSettings.classList.remove('active');
-            // Immediate refresh to verify/utilize token
+            this.showToast('Token 已保存，正在验证...');
             this.handleRefresh(true);
         } else {
-            this.showToast('Token 不能为空');
+            this.showToast('请输入 Token');
         }
     },
 
@@ -241,7 +222,7 @@ const App = {
         localStorage.removeItem(this.constants.TOKEN_KEY);
         this.state.token = null;
         this.elements.tokenInput.value = '';
-        this.showToast('Token 已清除，恢复默认模式');
+        this.showToast('Token 已清除');
         this.elements.modalSettings.classList.remove('active');
     },
 
@@ -250,9 +231,7 @@ const App = {
     },
 
     renderMessages(messages, clear = false) {
-        if (clear && this.elements.wallGrid) {
-            this.elements.wallGrid.innerHTML = '';
-        }
+        if (clear && this.elements.wallGrid) this.elements.wallGrid.innerHTML = '';
 
         const fragment = document.createDocumentFragment();
         messages.forEach(msg => {
@@ -279,24 +258,17 @@ const App = {
             fragment.appendChild(card);
         });
 
-        if (this.elements.wallGrid) {
-            this.elements.wallGrid.appendChild(fragment);
-        }
+        if (this.elements.wallGrid) this.elements.wallGrid.appendChild(fragment);
     },
 
     renderEmpty() {
         if (this.elements.wallGrid) {
-            this.elements.wallGrid.innerHTML = `
-        <div class="state-box">
-            <p>还没有人留下痕迹...</p>
-        </div>
-        `;
+            this.elements.wallGrid.innerHTML = '<div class="state-box"><p>还没有人留下痕迹...</p></div>';
         }
     },
 
     setLoading(loading) {
         this.state.isLoading = loading;
-        // We rely on the button spinner, no extra loader needed for now
     },
 
     async handleSubmit(e) {
@@ -318,17 +290,14 @@ const App = {
 
         try {
             if (this.state.token || CONFIG.token) {
-                // Direct API Mode (Prioritize User Token, then Config Token)
                 await this.postToGitHub(nickname, content);
                 this.showToast('发布成功！');
                 if (this.elements.modalWrite) {
                     this.elements.modalWrite.classList.remove('active');
-                    if (this.elements.formWrite) this.elements.formWrite.reset();
+                    this.elements.formWrite.reset();
                 }
-                // Refresh after short delay
-                setTimeout(() => this.handleRefresh(true), 1000);
+                setTimeout(() => this.handleRefresh(true), 1500);
             } else {
-                // Fallback Mode
                 this.redirectToGitHub(nickname, content);
             }
         } catch (error) {
@@ -342,7 +311,7 @@ const App = {
 
     async postToGitHub(nickname, content) {
         const { owner, repo } = CONFIG;
-        const token = this.state.token || CONFIG.token; // Use Dynamic Token first
+        const token = this.state.token || CONFIG.token;
 
         const title = nickname === 'Anonymous' ? '来自陌生人的留言' : `${nickname} 的留言`;
         const body = `${content}\n\n---\n*By ${nickname} via Strangers*`;
@@ -357,20 +326,17 @@ const App = {
             body: JSON.stringify({ title, body })
         });
 
-        if (!res.ok) throw new Error('API 请求失败，请检查 Token 权限');
+        if (!res.ok) throw new Error('API 请求失败');
     },
 
     redirectToGitHub(nickname, content) {
         const { owner, repo } = CONFIG;
         const title = nickname === 'Anonymous' ? '来自陌生人的留言' : `${nickname} 的留言`;
         const body = `${content}\n\n---\n*By ${nickname} via Strangers*`;
-
         const url = `https://github.com/${owner}/${repo}/issues/new?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
         window.open(url, '_blank');
         this.showToast('正在前往 GitHub...');
-        if (this.elements.modalWrite) {
-            this.elements.modalWrite.classList.remove('active');
-        }
+        if (this.elements.modalWrite) this.elements.modalWrite.classList.remove('active');
     },
 
     handleReply(id) {
@@ -388,14 +354,8 @@ const App = {
     },
 
     escapeHtml(unsafe) {
-        return unsafe
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 };
 
-// Start
 document.addEventListener('DOMContentLoaded', () => App.init());
