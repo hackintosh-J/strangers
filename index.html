@@ -1,71 +1,68 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Strangers · 功能导航</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f9f9fb;
-      color: #333;
-      padding: 40px;
-      line-height: 1.6;
-    }
-    h1 {
-      margin-top: 0;
-      font-size: 2rem;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    li {
-      margin-bottom: 12px;
-    }
-    a {
-      text-decoration: none;
-      color: #2563eb;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    .desc {
-      color: #666;
-      font-size: 0.9rem;
-      margin-left: 8px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strangers</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Merriweather:ital,wght@0,300;0,700;1,300&display=swap"
+    rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css">
 </head>
+
 <body>
-  <h1>Strangers · 功能导航</h1>
-  <p>选择下列任一功能体验：</p>
-  <ul>
-    <li>
-      <a href="warm-wall.html">温暖墙</a>
-      <span class="desc">查看来自 GitHub 的暖心留言</span>
-    </li>
-    <li>
-      <a href="landing.html">主题与多语言主页</a>
-      <span class="desc">切换主题颜色与界面语言</span>
-    </li>
-    <li>
-      <a href="tools.html">伙伴角</a>
-      <span class="desc">随机暖语、呼吸练习、歌单推荐与微小幸福</span>
-    </li>
-    <li>
-      <a href="accessible.html">无障碍演示</a>
-      <span class="desc">可访问性优化的主题与语言页面</span>
-    </li>
-    <li>
-      <a href="draft.html">投稿草稿</a>
-      <span class="desc">保存草稿并跳转到 GitHub 预填表单</span>
-    </li>
-    <li>
-      <a href="pwa/index.html">PWA 离线体验</a>
-      <span class="desc">体验 service worker、离线暖心句子和自定义主题</span>
-    </li>
-  </ul>
+
+  <header class="container">
+    <h1>Strangers</h1>
+    <p>在这里，我们都是过客。留下你的声音，或者倾听别人的故事。</p>
+  </header>
+
+  <main class="container">
+    <div class="wall-grid">
+      <!-- Messages will be injected here -->
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <button class="fab" aria-label="写点什么">
+    <span>+</span>
+  </button>
+
+  <!-- Write Modal -->
+  <div class="modal-overlay">
+    <div class="modal">
+      <button class="close-btn">&times;</button>
+      <h2>写下此刻的想法</h2>
+      <form class="modal-form">
+        <div class="form-group">
+          <label for="nickname">怎么称呼你</label>
+          <input type="text" id="nickname" class="form-input" placeholder="匿名 (可选)" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label for="content">想说什么</label>
+          <textarea id="content" class="form-textarea" placeholder="在这里写下你的故事..." required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary">取消</button>
+          <button type="submit" class="btn btn-primary">发布</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast">提示信息</div>
+
+  <!-- Scripts -->
+  <script src="assets/config.js"></script>
+  <script src="scripts/app.js"></script>
 </body>
+
 </html>
