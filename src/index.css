@@ -4,6 +4,40 @@
 
 @layer base {
     body {
-        @apply antialiased text-gray-900 bg-gray-50;
+        @apply antialiased text-ink bg-paper font-sans selection:bg-warm-200 selection:text-ink;
+        background-image: radial-gradient(#E3EBE3 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+
+    /* Healing Typography */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-serif tracking-wide text-ink;
+    }
+
+    .font-hand {
+        font-family: 'Ma Shan Zheng', cursive;
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply px-6 py-2 bg-warm-500 text-white rounded-full font-medium shadow-sm hover:bg-warm-600 hover:shadow-md transition-all active:scale-95;
+    }
+
+    .btn-ghost {
+        @apply p-2 text-pencil hover:text-warm-600 hover:bg-warm-50 rounded-full transition-all;
+    }
+
+    .card {
+        @apply bg-card rounded-2xl shadow-[0_2px_15px_-3px_rgba(0, 0, 0, 0.05)] border border-warm-100;
+    }
+
+    .input-warm {
+        @apply w-full px-4 py-3 rounded-xl bg-white border border-warm-200 text-ink focus:outline-none focus:border-warm-400 focus:ring-4 focus:ring-warm-100 transition-all;
     }
 }

@@ -5,6 +5,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
 import Profile from './pages/Profile';
+import About from './pages/About';
+
 
 function App() {
     return (
@@ -15,6 +17,8 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/about" element={<About />} />
+
                     {/* Add Admin Route Later */}
                 </Routes>
             </HashRouter>
