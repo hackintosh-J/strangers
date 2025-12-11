@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Strangers</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Merriweather:ital,wght@0,300;0,700;1,300&display=swap"
+    rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+
+<body>
+
+  <header class="container">
+    <h1>Strangers</h1>
+    <p>在这里，我们都是过客。留下你的声音，或者倾听别人的故事。</p>
+
+    <button id="refresh-btn" class="refresh-btn" aria-label="刷新内容">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 4v6h-6"></path>
+        <path d="M1 20v-6h6"></path>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+      </svg>
+      刷新
+    </button>
+  </header>
+
+  <main class="container">
+    <div class="wall-grid">
+      <!-- Messages will be injected here -->
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <button class="fab" aria-label="写点什么">
+    <span>+</span>
+  </button>
+
+  <!-- Write Modal -->
+  <div id="modal-write" class="modal-overlay">
+    <div class="modal">
+      <button class="close-btn" data-target="modal-write">&times;</button>
+      <h2>写下此刻的想法</h2>
+      <form class="modal-form" id="form-write">
+        <div class="form-group">
+          <label for="nickname">怎么称呼你</label>
+          <input type="text" id="nickname" class="form-input" placeholder="匿名 (可选)" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label for="content">想说什么</label>
+          <textarea id="content" class="form-textarea" placeholder="在这里写下你的故事..." required></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary close-trigger" data-target="modal-write">取消</button>
+          <button type="submit" class="btn btn-primary">发布</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast">提示信息</div>
+
+  <!-- Scripts -->
+  <script src="assets/config.js"></script>
+  <script src="scripts/app.js"></script>
+</body>
+
+</html>
