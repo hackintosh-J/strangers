@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strangers · 暖心留言板</title>
+  <!-- PWA 清单和样式 -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="theme-color" content="#1b1f3b" />
+</head>
+<body>
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">预留 PWA 与匿名体验</p>
+      <h1>Strangers</h1>
+      <p class="lede">离线也能感受到温暖，支持自定义头像与背景主题，未来可叠加防滥用策略。</p>
+    </div>
+    <div class="avatar" id="avatarPreview">🌟</div>
+  </header>
+
+  <main>
+    <section class="panel" aria-labelledby="pwa-title">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">PWA 预留</p>
+          <h2 id="pwa-title">清单与 Service Worker</h2>
+        </div>
+        <button class="ghost" id="registerSwBtn">手动注册</button>
+      </div>
+      <p>站点包含 <code>manifest.webmanifest</code> 与 <code>service-worker.js</code>，预缓存静态资源与暖心句子，并以内建的低频更新策略减少无谓的网络请求。</p>
+      <ul class="bullets">
+        <li>支持离线访问主页与样式、脚本、Manifest。</li>
+        <li>暖心句子缓存 6 小时更新一次，优先走缓存，网络可用时后台刷新。</li>
+        <li>未来接入后端或 CDN 时，可扩展更多离线资源与版本控制。</li>
+      </ul>
+      <p class="status" id="swStatus">Service Worker 尚未注册</p>
+    </section>
+
+    <section class="panel" aria-labelledby="warmth-title">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">离线暖心句子</p>
+          <h2 id="warmth-title">小幅更新、随取随用</h2>
+        </div>
+        <button class="primary" id="refreshQuote">换一句</button>
+      </div>
+      <p id="quote" class="quote">加载中…</p>
+      <p class="hint">句子取自 <code>warmth-sentences.json</code>，支持缓存后离线访问。</p>
+    </section>
+
+    <section class="panel" aria-labelledby="customize-title">
+      <div class="panel__header">
+        <div>
+          <p class="eyebrow">自定义</p>
+          <h2 id="customize-title">头像与背景主题</h2>
+        </div>
+        <button class="ghost" id="resetPrefs">重置</button>
+      </div>
+      <div class="grid">
+        <div>
+          <h3>头像内容</h3>
+          <label class="field">
+            <span>使用 Emoji</span>
+            <input type="text" id="avatarEmoji" maxlength="4" placeholder="例如：😊" />
+          </label>
+          <label class="field">
+            <span>图片 URL（可选）</span>
+            <input type="url" id="avatarUrl" placeholder="https://example.com/avatar.png" />
+          </label>
+          <p class="hint">头像信息仅存储在浏览器 LocalStorage，不会上传。</p>
+        </div>
+        <div>
+          <h3>背景主题</h3>
+          <label class="field">
+            <span>背景色</span>
+            <input type="color" id="bgColor" value="#1b1f3b" />
+          </label>
+          <label class="field">
+            <span>点缀色</span>
+            <input type="color" id="accentColor" value="#ff9e6d" />
+          </label>
+          <p class="hint">实时预览，刷新或离线后依然保留。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="abuse-title">
+      <p class="eyebrow">防滥用预案</p>
+      <h2 id="abuse-title">匿名验证码与限流策略</h2>
+      <p>当前前端仅提供体验层，真正的防滥用需要后端或边缘函数配合。建议方案：</p>
+      <ol class="bullets">
+        <li>在匿名提交接口前置 Turnstile / reCAPTCHA、Cloudflare Workers 或应用层网关。</li>
+        <li>结合 IP + User-Agent + 指纹轻量哈希做速率限制，限制瞬时请求与每日配额。</li>
+        <li>返回速率限制剩余额度信息，前端根据响应头提示或退避。</li>
+      </ol>
+      <p class="hint">待接入后端时，可在此页面显示验证码提示与剩余额度提醒。</p>
+    </section>
+  </main>
+
+  <script src="script.js" type="module"></script>
+</body>
+</html>

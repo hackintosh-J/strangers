@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>温暖墙 · Strangers</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fff8f4;
+      color: #333;
+      line-height: 1.6;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+    .message-list {
+      margin-top: 20px;
+      display: grid;
+      gap: 16px;
+    }
+    .message {
+      background: #fff;
+      border: 1px solid #f4d4c7;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+    .load-more {
+      margin-top: 24px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: #ff9f6b;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>温暖墙</h1>
+  <p>这里汇聚了来自陌生人的真诚留言，离线时也可浏览示例内容。</p>
+  <div id="messages" class="message-list"></div>
+  <button id="load-more" class="load-more">加载更多</button>
+
+  <script src="scripts/api.js"></script>
+  <script src="scripts/warm-wall.js"></script>
+</body>
+</html>

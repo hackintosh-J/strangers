@@ -1,0 +1,18 @@
+<svg width="360" height="260" viewBox="0 0 360 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFD9D0" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#FF9F6B" stop-opacity="0.55" />
+    </linearGradient>
+  </defs>
+  <rect x="20" y="20" width="320" height="200" rx="28" fill="url(#bg)" />
+  <rect x="52" y="54" width="256" height="132" rx="18" fill="white" opacity="0.9" />
+  <circle cx="96" cy="98" r="24" fill="#FFD9D0" />
+  <circle cx="96" cy="98" r="12" fill="#FF9F6B" />
+  <rect x="128" y="84" width="140" height="12" rx="6" fill="#F7B7A3" />
+  <rect x="128" y="104" width="116" height="10" rx="5" fill="#FFE6DE" />
+  <rect x="70" y="142" width="220" height="12" rx="6" fill="#FFE6DE" />
+  <rect x="84" y="162" width="180" height="12" rx="6" fill="#FFD3C1" />
+  <path d="M180 196c18-12 38-12 56 0 4 2 5 7 2 10-10 10-26 16-41 16s-31-6-41-16c-3-3-2-8 2-10 7-5 15-8 22-10z" fill="#FFB68D" />
+  <path d="M118 186c10 0 18 8 18 18 0 10-8 18-18 18s-18-8-18-18c0-10 8-18 18-18z" fill="#FFE6DE" />
+</svg>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>写下一段话 · Strangers</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      --primary: #2563eb;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --bg: #f9fafb;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #111827;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 2rem;
+    }
+
+    p.description {
+      margin-top: 0;
+      color: var(--muted);
+    }
+
+    form {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    select,
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .hint {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button,
+    .button-link {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button.primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    button.secondary,
+    .button-link.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    button.danger,
+    .button-link.danger {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecdd3;
+    }
+
+    .status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      color: #0f172a;
+      min-height: 20px;
+    }
+
+    .status.error {
+      background: #fef2f2;
+      border-color: #fecdd3;
+      color: #b91c1c;
+    }
+
+    .status.success {
+      background: #ecfdf3;
+      border-color: #bbf7d0;
+      color: #166534;
+    }
+
+    .links {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .button-link.disabled {
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .note {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>写下一段话</h1>
+    <p class="description">草稿会保存到本地的「我的草稿」。提交后，请通过 GitHub Issue 或 Discussion 把内容发布出去。</p>
+
+    <form id="entry-form" novalidate>
+      <div class="field">
+        <label for="emotion">情绪选择</label>
+        <select id="emotion" name="emotion">
+          <option value="">（可选）用一个词或表情描述情绪</option>
+          <option value="😊">😊 开心</option>
+          <option value="😌">😌 平静</option>
+          <option value="😢">😢 低落</option>
+          <option value="😡">😡 生气</option>
+          <option value="🤔">🤔 思考</option>
+          <option value="❤️">❤️ 感谢</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="content">正文</label>
+        <textarea id="content" name="content" maxlength="500" required placeholder="想写什么都行，最多 500 字"></textarea>
+        <div class="hint">必填，500 字内。为空或超过上限会提示。</div>
+      </div>
+
+      <div class="field">
+        <label for="nickname">昵称（可选）</label>
+        <input type="text" id="nickname" name="nickname" maxlength="50" placeholder="留下一个署名或保持空白" />
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary">保存草稿并准备发布</button>
+        <button type="button" id="export-json" class="secondary">导出我的草稿 JSON</button>
+        <button type="button" id="clear-storage" class="danger">一键清除本地数据</button>
+      </div>
+    </form>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <div class="links">
+      <a id="issue-link" class="button-link secondary disabled" href="#" target="_blank" rel="noopener noreferrer">前往 GitHub Issue</a>
+      <a id="discussion-link" class="button-link secondary disabled" href="#" target="_blank" rel="noopener noreferrer">前往 GitHub Discussion</a>
+    </div>
+
+    <p class="note">默认跳转仓库为 <code>OWNER/REPO</code>（可在 <code>draft.js</code> 中修改），会自动预填标题和正文模板。</p>
+  </main>
+
+  <script src="scripts/draft.js"></script>
+</body>
+</html>

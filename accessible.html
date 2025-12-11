@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strangers · 无障碍演示</title>
+  <link rel="stylesheet" href="styles/accessible.css" />
+</head>
+<body>
+  <a href="#main-content" class="skip-link">跳过导航，直接到内容</a>
+  <header class="header">
+    <h1 id="page-title">可访问性演示</h1>
+    <div class="controls">
+      <label for="a11y-lang-select">语言：</label>
+      <select id="a11y-lang-select" aria-label="选择语言">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+      <button id="a11y-theme-toggle" aria-label="切换主题" aria-pressed="false">切换主题</button>
+    </div>
+  </header>
+  <main id="main-content">
+    <section>
+      <h2 id="a11y-section-title-1">介绍</h2>
+      <p id="a11y-section-desc-1">该页面演示了如何使用 aria 属性和键盘可操作控件来提高可访问性。</p>
+    </section>
+    <section>
+      <h2 id="a11y-section-title-2">说明</h2>
+      <p id="a11y-section-desc-2">通过上方按钮可以轮换主题颜色，选择下拉框可切换语言。所有控件都可通过键盘操作，并添加了 aria 标签。</p>
+    </section>
+  </main>
+  <footer>
+    <p id="a11y-footer-text">MIT 许可 · Hackintosh J</p>
+  </footer>
+  <script src="scripts/i18n.js"></script>
+  <script src="scripts/accessible.js"></script>
+</body>
+</html>
