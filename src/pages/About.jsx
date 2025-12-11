@@ -8,6 +8,11 @@ export default function About() {
             <Navbar />
 
             <main className="max-w-2xl mx-auto px-6">
+                <div className="mb-8 text-center">
+                    <a href="/" className="text-warm-400 hover:text-warm-600 text-sm font-serif border-b border-transparent hover:border-warm-400 transition-all">
+                        ← 返回主页
+                    </a>
+                </div>
                 <article className="prose prose-lg prose-p:font-serif prose-p:text-ink prose-headings:font-serif prose-headings:tracking-wide mx-auto">
                     <h1 className="text-center text-4xl mb-12 text-warm-700">初衷</h1>
 

@@ -173,19 +173,54 @@ app.put('/api/users/:id/password', authMiddleware, async (c) => {
 // --- Public Posts Routes ---
 app.get('/api/messages', async (c) => {
     try {
-        const { results } = await c.env.DB.prepare(
-            `SELECT m.*, u.username, 
+        const { cursor, limit = 20 } = c.req.query();
+        let query = `SELECT m.*, u.username, 
        (SELECT COUNT(*) FROM comments WHERE message_id = m.id) as comment_count,
        (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count
        FROM messages m 
-       LEFT JOIN users u ON m.user_id = u.id 
-       ORDER BY m.created_at DESC LIMIT 50`
-        ).all();
-        return c.json(results);
+       LEFT JOIN users u ON m.user_id = u.id`;
+
+        let params = [];
+        if (cursor) {
+            query += ` WHERE m.id < ?`;
+            params.push(cursor);
+        }
+
+        query += ` ORDER BY m.created_at DESC, m.id DESC LIMIT ?`;
+        params.push(parseInt(limit));
+
+        const { results } = await c.env.DB.prepare(query).bind(...params).all();
+
+        return c.json({
+            data: results,
+            next_cursor: results.length > 0 ? results[results.length - 1].id : null
+        });
     } catch (e) {
         return c.json({ error: e.message, stack: e.stack }, 500);
     }
 });
+
+// ... (POST /api/messages remains same)
+
+// --- Comments Deletion ---
+app.delete('/api/comments/:id', authMiddleware, async (c) => {
+    const id = c.req.param('id');
+    const user = c.get('jwtPayload');
+
+    const comment = await c.env.DB.prepare('SELECT user_id FROM comments WHERE id = ?').bind(id).first();
+    if (!comment) return c.json({ error: 'Not found' }, 404);
+
+    // Allow if Admin OR Owner
+    if (user.role !== 'admin' && comment.user_id !== user.id) {
+        return c.json({ error: 'Forbidden' }, 403);
+    }
+
+    await c.env.DB.prepare('DELETE FROM comments WHERE id = ?').bind(id).run();
+    return c.json({ success: true });
+});
+
+// ... (Original comment posting routes)
+
 
 // --- Protected Post Routes ---
 app.post('/api/messages', authMiddleware, async (c) => {
