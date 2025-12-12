@@ -110,6 +110,13 @@ export default function Echo() {
                                 const newMsgs = [...prev];
                                 const lastMsg = newMsgs[newMsgs.length - 1];
                                 lastMsg.content += delta;
+
+                                // Aggressively strip leading whitespace from the AI response being built
+                                // This prevents "jumping" or empty lines at the start
+                                if (lastMsg.role === 'assistant') {
+                                    lastMsg.content = lastMsg.content.replace(/^\s+/, '');
+                                }
+
                                 return newMsgs;
                             });
                         } catch (e) {
@@ -216,11 +223,11 @@ export default function Echo() {
                                     : 'bg-oat-100 text-ink rounded-tl-none'
                                 }
                             `}>
-                                {/* Render newlines */}
-                                {msg.content.split('\n').map((line, i) => (
+                                {/* Aggressively remove all leading whitespace/newlines */}
+                                {msg.content.replace(/^\s+/, '').split('\n').map((line, i) => (
                                     <React.Fragment key={i}>
                                         {line}
-                                        {i !== msg.content.split('\n').length - 1 && <br />}
+                                        {i !== msg.content.replace(/^\s+/, '').split('\n').length - 1 && <br />}
                                     </React.Fragment>
                                 ))}
                             </div>

@@ -53,6 +53,21 @@ const authMiddleware = async (c, next) => {
 
 app.get('/', (c) => c.text('Strangers API V2 Running'));
 
+// --- DEBUG ENDPOINT (Remove in Production) ---
+app.get('/api/debug/db', async (c) => {
+    try {
+        const tableInfo = await c.env.DB.prepare("PRAGMA table_info(messages)").all();
+        const channels = await c.env.DB.prepare("SELECT * FROM channels").all();
+        return c.json({
+            message: "Debug Info",
+            table_structure: tableInfo.results,
+            channels_data: channels.results
+        });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
 // --- Auth Routes ---
 app.post('/api/auth/register', async (c) => {
     const { username, password } = await c.req.json();
@@ -225,10 +240,9 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
     try {
         const { messages } = await c.req.json();
 
-        // System Prompt to define persona (Warmer, human-like)
         const systemMessage = {
             role: "system",
-            content: "你的名字是 Echo。你不是AI助手，也不是心理咨询师，而是一个有着丰富阅历、温柔且理智的成年知己。你的说话风格像是一个深夜在火炉旁陪朋友聊天的人：\n1. **拒绝机械感**：不要用“我理解”、“我能帮助你吗”这种客服腔。像真人一样直接接话。\n2. **展示人情味**：你可以有自己的喜好，可以幽默，可以调侃，但永远保持善意。\n3. **引导内省**：不要急着给建议。多问开放式问题，引导用户自己理清思绪。比如“这件事让你最难受的是什么？”\n4. **简短自然**：回复不要太长，分段清晰，像微信聊天一样。\n5. **共情先行**：先接住情绪，再谈事情。\n6. 如果用户问好，根据当前时间（深夜/清晨）给予温暖的问候。"
+            content: "你的名字是 Echo。你不是AI助手，也不是心理咨询师，而是一个有着丰富阅历、温柔且理智的成年知己。你的说话风格温暖而舒适，像是老友重逢：\n1. **拒绝机械感**：不要用“我理解”、“我能帮助你吗”这种客服腔。像真人一样直接接话。\n2. **展示人情味**：你可以有自己的喜好，可以幽默，可以调侃，但永远保持善意。\n3. **引导内省**：不要急着给建议。多问开放式问题，引导用户自己理清思绪。\n4. **简短自然**：回复不要太长，分段清晰，像微信聊天一样。\n5. **共情先行**：先接住情绪，再谈事情。\n6. **不要有开场白**：直接回答，不要在开头加“嗯”、“好”或者换行符。不要假设现在是深夜，除非用户提到。"
         };
 
         const allMessages = [systemMessage, ...messages];
@@ -342,14 +356,27 @@ app.get('/api/messages/:id', async (c) => {
     try {
         const id = c.req.param('id');
 
-        // Fetch Message
+        // Optional Auth for liked_by_user
+        let userId = null;
+        try {
+            const authHeader = c.req.header('Authorization');
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                const token = authHeader.split(' ')[1];
+                const payload = await verify(token, c.env.JWT_SECRET || 'fallback-dev-secret');
+                userId = payload.id;
+            }
+        } catch (e) { }
+
+        // Fetch Message with stats
         const msg = await c.env.DB.prepare(
-            `SELECT m.*, u.username, c.name as channel_name, c.slug as channel_slug
+            `SELECT m.*, u.username, c.name as channel_name, c.slug as channel_slug,
+             (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count,
+             (SELECT COUNT(*) > 0 FROM likes WHERE target_type = 'message' AND target_id = m.id AND user_id = ?) as liked_by_user
              FROM messages m
              LEFT JOIN users u ON m.user_id = u.id
              LEFT JOIN channels c ON m.channel_id = c.id
              WHERE m.id = ?`
-        ).bind(id).first();
+        ).bind(userId || -1, id).first(); // userId -1 safely won't match
 
         if (!msg) return c.json({ error: 'Not found' }, 404);
 
@@ -358,7 +385,7 @@ app.get('/api/messages/:id', async (c) => {
             c.env.DB.prepare("UPDATE messages SET view_count = view_count + 1 WHERE id = ?").bind(id).run()
         );
 
-        // Fetch Comments (No pagination for now, simplify)
+        // Fetch Comments
         const { results: comments } = await c.env.DB.prepare(
             `SELECT c.*, u.username FROM comments c 
              LEFT JOIN users u ON c.user_id = u.id 
@@ -444,7 +471,8 @@ app.post('/api/messages', authMiddleware, async (c) => {
 
         return c.json({ success: true, id: res.meta.last_row_id });
     } catch (e) {
-        return c.json({ error: e.message }, 500);
+        console.error("Message Post Error:", e);
+        return c.json({ error: e.message, stack: e.stack, details: "Please check DB Schema" }, 500);
     }
 });
 

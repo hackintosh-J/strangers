@@ -12,6 +12,7 @@ export default function Sidebar() {
         { to: '/drifting', icon: <Ship size={24} />, label: '漂流' },
         { to: '/compose', icon: <PenTool size={24} />, label: '发帖', highlight: true }, // New Center Action
         { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' },
+        ...(user?.role === 'admin' ? [{ to: '/admin', icon: <Compass size={24} />, label: '管理' }] : []),
         { to: user ? '/profile' : '/login', icon: user ? <User size={24} /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
     ];
 

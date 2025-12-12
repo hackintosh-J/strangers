@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import PostListItem from '../components/PostListItem';
 import { PenSquare } from 'lucide-react';
@@ -7,7 +7,14 @@ import { useAuth } from '../hooks/useAuth';
 
 export default function ChannelFeed() {
     const { slug } = useParams();
-    const { user, token } = useAuth();
+    const { user, token, loading: authLoading } = useAuth();
+
+    // Privacy: Hollow is hidden from public list view
+    if (slug === 'hollow' && !authLoading) {
+        if (!user || user.role !== 'admin') {
+            return <Navigate to="/drifting" replace />;
+        }
+    }
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [nextCursor, setNextCursor] = useState(null);

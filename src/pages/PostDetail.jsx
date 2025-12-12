@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Markdown from 'react-markdown';
-import { ArrowLeft, Clock, MessageSquare, Heart, Send } from 'lucide-react';
+import { ArrowLeft, Clock, MessageSquare, Heart, Send, Trash2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 export default function PostDetail() {
@@ -62,9 +62,45 @@ export default function PostDetail() {
                     <button onClick={() => navigate(-1)} className="p-2 hover:bg-oat-100 rounded-full text-oat-400 hover:text-ink transition-colors">
                         <ArrowLeft size={20} />
                     </button>
-                    <span className="font-serif font-bold text-ink">
+                    <span className="font-serif font-bold text-ink mr-auto">
                         {post?.channel_name || '详情'}
                     </span>
+
+                    {/* Post Actions */}
+                    {post && (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={async () => {
+                                    if (!user) return alert('请先登录');
+                                    await fetch(`${API_URL}/api/messages/${id}/like`, {
+                                        method: 'POST',
+                                        headers: { 'Authorization': `Bearer ${token}` }
+                                    });
+                                    fetchDetail();
+                                }}
+                                className="p-2 text-rose-400 hover:bg-rose-50 rounded-full transition-colors flex items-center gap-1"
+                            >
+                                <Heart size={20} className={post.liked_by_user ? "fill-rose-400" : ""} />
+                                <span className="text-xs font-bold">{post.like_count || 0}</span>
+                            </button>
+
+                            {(user?.role === 'admin' || user?.id === post.user_id) && (
+                                <button
+                                    onClick={async () => {
+                                        if (!confirm('确认删除?')) return;
+                                        const res = await fetch(`${API_URL}/api/messages/${id}`, {
+                                            method: 'DELETE',
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                        });
+                                        if (res.ok) navigate('/');
+                                    }}
+                                    className="p-2 text-oat-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {loading ? (
@@ -108,6 +144,21 @@ export default function PostDetail() {
                                             <div className="flex items-baseline gap-2 mb-1">
                                                 <span className="text-sm font-bold text-ink">{c.username}</span>
                                                 <span className="text-xs text-oat-300">{new Date(c.created_at * 1000).toLocaleString()}</span>
+                                                {(user?.role === 'admin' || user?.id === c.user_id) && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            if (!confirm('确认删除评论?')) return;
+                                                            const res = await fetch(`${API_URL}/api/comments/${c.id}`, {
+                                                                method: 'DELETE',
+                                                                headers: { 'Authorization': `Bearer ${token}` }
+                                                            });
+                                                            if (res.ok) fetchDetail();
+                                                        }}
+                                                        className="ml-auto text-oat-300 hover:text-rose-400 p-1"
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                )}
                                             </div>
                                             <p className="text-oat-600 leading-relaxed text-sm md:text-base">{c.content}</p>
                                         </div>
@@ -116,8 +167,7 @@ export default function PostDetail() {
                                 {comments.length === 0 && <p className="text-oat-400 text-center text-sm">还没有人说话，也许此刻正是时候。</p>}
                             </div>
 
-                            {/* Comment Input */}
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 items-center">
                                 <input
                                     className="flex-1 bg-white border-oat-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-haze-100 transition-all text-ink placeholder-oat-300"
                                     placeholder="写下你的回应..."
@@ -136,3 +186,33 @@ export default function PostDetail() {
         </div>
     );
 }
+
+// Add these handlers inside component before return
+/* 
+    const handleLike = async () => {
+        if (!user) return alert('请先登录');
+        await fetch(`${API_URL}/api/messages/${id}/like`, { 
+            method: 'POST', 
+            headers: {'Authorization': `Bearer ${token}`} 
+        });
+        fetchDetail(); // Refresh to get updated count
+    };
+
+    const handleDeletePost = async () => {
+        if (!confirm('确认删除?')) return;
+        const res = await fetch(`${API_URL}/api/messages/${id}`, {
+            method: 'DELETE',
+            headers: {'Authorization': `Bearer ${token}`}
+        });
+        if (res.ok) navigate('/');
+    };
+
+    const handleDeleteComment = async (cid) => {
+        if (!confirm('确认删除评论?')) return;
+        const res = await fetch(`${API_URL}/api/comments/${cid}`, {
+            method: 'DELETE',
+            headers: {'Authorization': `Bearer ${token}`}
+        });
+        if (res.ok) fetchDetail();
+    };
+*/
