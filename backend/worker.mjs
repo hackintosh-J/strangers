@@ -418,14 +418,15 @@ app.get('/api/messages', async (c) => {
         let params = [];
 
         if (sort === 'hot') {
-            // Hot: views + comments*2 + likes*3
-            // Note: We cannot easily use aliases in ORDER BY with complex expressions in some SQL engines, 
-            // but SQLite usually supports it or we repeat the subqueries.
-            // Performance note: fast sorting on computed columns needs generated columns/indexes, but for small app it's fine.
-            query += ` ORDER BY (m.view_count + 
+            // Hot = (views + comments*2 + likes*3) / (Time+2)^1.5
+            // Using unixepoch('now') for current time in seconds
+            query += ` ORDER BY (
+                (m.view_count + 
                 (SELECT COUNT(*) FROM comments WHERE message_id = m.id) * 2 + 
-                (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) * 3
-            ) DESC, m.created_at DESC LIMIT ?`;
+                (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) * 3)
+                / 
+                POWER((unixepoch('now') - m.created_at) / 3600.0 + 2, 1.5)
+            ) DESC LIMIT ?`;
             params.push(parseInt(limit));
         } else {
             if (cursor) {

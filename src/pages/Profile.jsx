@@ -124,12 +124,7 @@ export default function Profile() {
 
                             <div className="flex gap-3 mb-2">
                                 {isSelf ? (
-                                    <button onClick={logout} className="px-4 py-2 rounded-full border border-oat-300 text-oat-500 hover:bg-oat-50 text-sm font-bold transition-all">
-                                        退出登录
-                                    </button>
-                                ) : (
-                                    <>
-                                        {/* Admin Entry */}
+                                    <div className="flex gap-2">
                                         {currentUser?.role === 'admin' && (
                                             <button
                                                 onClick={() => navigate('/admin')}
@@ -139,6 +134,13 @@ export default function Profile() {
                                                 <span>管理面板</span>
                                             </button>
                                         )}
+                                        <button onClick={logout} className="px-4 py-2 rounded-full border border-oat-300 text-rose-500 hover:bg-rose-50 text-sm font-bold transition-all">
+                                            退出登录
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Chat Button if Friends? Or just always show? Logic check: only friends can chat. */}
                                         {/* Chat Button if Friends? Or just always show? Logic check: only friends can chat. */}
                                         <button
                                             onClick={handleFollow}
