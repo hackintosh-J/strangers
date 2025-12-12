@@ -265,10 +265,6 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
         console.error("Chat Error:", e);
         return c.json({ error: e.message }, 500);
     }
-
-} catch (e) {
-    return c.json({ error: e.message }, 500);
-}
 });
 
 app.post('/api/ai/summarize', authMiddleware, async (c) => {

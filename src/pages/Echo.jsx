@@ -57,7 +57,10 @@ export default function Echo() {
     useEffect(scrollToBottom, [messages]);
 
     const handleSend = async (textOverride = null) => {
-        const textToSend = textOverride || input;
+        // Fix: onClick passes an event object, which causes crash on logic below. Check type.
+        const isString = typeof textOverride === 'string';
+        const textToSend = isString ? textOverride : input;
+
         if (!textToSend.trim() || loading) return;
 
         const userMsg = { role: 'user', content: textToSend };
@@ -177,7 +180,7 @@ export default function Echo() {
     return (
         <div className="flex h-screen bg-oat-50">
             <Sidebar />
-            <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full bg-white shadow-soft h-full">
+            <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full bg-white shadow-soft h-full pb-20 md:pb-0">
                 {/* Header */}
                 <div className="p-4 border-b border-oat-200 flex justify-between items-center bg-white/95 backdrop-blur z-10">
                     <div className="flex items-center gap-3">
