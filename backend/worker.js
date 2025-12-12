@@ -241,7 +241,7 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
                 'Authorization': `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "glm-4-flash", // Using Flash model as requested for speed/cost
+                model: "glm-4.6v-flash", // Correct model name
                 messages: allMessages,
                 stream: true
             })
@@ -278,7 +278,7 @@ app.post('/api/ai/summarize', authMiddleware, async (c) => {
                 'Authorization': `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "glm-4-flash",
+                model: "glm-4.6v-flash",
                 messages: [systemMessage, ...messages],
                 stream: false, // No stream for summarize
                 response_format: { type: "json_object" } // Force JSON if supported, or prompt engineered

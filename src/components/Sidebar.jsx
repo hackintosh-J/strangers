@@ -1,23 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Home, Compass, MessageSquare, Menu, User, LogIn, Ship, Sparkles } from 'lucide-react';
+import { Home, Compass, MessageSquare, Menu, User, LogIn, Ship, Sparkles, PenTool } from 'lucide-react';
 
 export default function Sidebar() {
     const { user, logout } = useAuth();
     const location = useLocation();
 
-    // "Drifting" is a new feature (Bottle)
     const NAV_ITEMS = [
         { to: '/', icon: <Home size={24} />, label: '首页' },
         { to: '/drifting', icon: <Ship size={24} />, label: '漂流' },
-        { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' }, // New AI Feature
-        { to: '/about', icon: <Compass size={24} />, label: '关于' },
+        { to: '/compose', icon: <PenTool size={24} />, label: '发帖', highlight: true }, // New Center Action
+        { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' },
         { to: user ? '/profile' : '/login', icon: user ? <User size={24} /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
     ];
 
-    const NavItem = ({ to, icon, label, exact = false }) => {
+    const NavItem = ({ to, icon, label, highlight, exact = false }) => {
         const isActive = exact ? location.pathname === to : location.pathname.startsWith(to);
+
+        // Highlight style (Center Button)
+        if (highlight) {
+            return (
+                <Link to={to} className="flex items-center justify-center md:px-6 md:py-3.5">
+                    <div className="w-12 h-12 md:w-full md:h-12 bg-haze-600 rounded-full md:rounded-xl text-white flex items-center justify-center md:justify-start md:px-4 gap-3 shadow-lg hover:bg-haze-700 hover:scale-105 active:scale-95 transition-all">
+                        {icon}
+                        <span className="hidden md:block font-bold">发帖</span>
+                    </div>
+                </Link>
+            )
+        }
 
         return (
             <Link
