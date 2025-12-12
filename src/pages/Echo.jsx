@@ -312,7 +312,8 @@ export default function Echo() {
                     Echo 由 AI 驱动，内容仅供参考。
                 </p>
         </div>
-        </main >
-    </div >
+        </main>
+    </div>
     );
 }
+
