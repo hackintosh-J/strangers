@@ -16,14 +16,18 @@ export default function Friends() {
 
         // Check Cache
         const cacheKey = `friends_cache_${user?.id}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-            const { data, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < 60000) { // 1 min cache
-                setFriends(data);
-                setLoading(false);
-                return; // Skip fetch if cached
+        try {
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < 60000) { // 1 min cache
+                    setFriends(data);
+                    setLoading(false);
+                    return; // Skip fetch if cached
+                }
             }
+        } catch (e) {
+            sessionStorage.removeItem(cacheKey);
         }
 
         fetch(`${API_URL}/api/friends`, {
