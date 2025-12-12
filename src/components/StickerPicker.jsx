@@ -37,7 +37,7 @@ export default function StickerPicker({ onSelect, onClose }) {
             formData.append('file', file);
 
             const uploadRes = await fetch(`${API_URL}/api/upload`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
@@ -63,6 +63,18 @@ export default function StickerPicker({ onSelect, onClose }) {
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleDelete = async (e, id) => {
+        e.stopPropagation();
+        if (!confirm('删除此表情？')) return;
+        try {
+            await fetch(`${API_URL}/api/stickers/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            fetchStickers();
+        } catch (e) { console.error(e); }
     };
 
     return (
@@ -94,6 +106,12 @@ export default function StickerPicker({ onSelect, onClose }) {
                         className="aspect-square rounded-xl p-1 hover:bg-oat-100 transition-colors relative group"
                     >
                         <img src={s.url} alt="sticker" className="w-full h-full object-contain" />
+                        <div
+                            onClick={(e) => handleDelete(e, s.id)}
+                            className="absolute top-0 right-0 p-1 bg-white rounded-bl-lg opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 shadow-sm"
+                        >
+                            <Trash2 size={14} />
+                        </div>
                     </button>
                 ))}
             </div>

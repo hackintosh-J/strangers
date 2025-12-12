@@ -61,7 +61,8 @@ const authMiddleware = async (c, next) => {
 // --- Multimedia Routes (R2) ---
 // 1. Get Presigned URL (or Upload Proxy)
 // For simplicity and small files, we proxy upload through Worker for now.
-app.post('/api/upload', authMiddleware, async (c) => {
+// Shared Upload Handler
+const handleUpload = async (c) => {
     try {
         const body = await c.req.parseBody();
         const file = body['file']; // Multipart form data
@@ -111,7 +112,10 @@ app.post('/api/upload', authMiddleware, async (c) => {
     } catch (e) {
         return c.json({ error: e.message, stack: e.stack }, 500);
     }
-});
+};
+
+app.post('/api/upload', authMiddleware, handleUpload);
+app.put('/api/upload', authMiddleware, handleUpload);
 
 // 2. Serve Media
 app.get('/api/media/:folder/:filename', async (c) => {
@@ -180,6 +184,15 @@ app.post('/api/stickers/collect', authMiddleware, async (c) => {
         await c.env.DB.prepare(
             "INSERT OR IGNORE INTO user_stickers (user_id, sticker_id) VALUES (?, ?)"
         ).bind(user.id, stickerId).run();
+        return c.json({ success: true });
+    } catch (e) { return c.json({ error: e.message }, 500); }
+});
+
+app.delete('/api/stickers/:id', authMiddleware, async (c) => {
+    const stickerId = c.req.param('id');
+    const user = c.get('jwtPayload');
+    try {
+        await c.env.DB.prepare("DELETE FROM user_stickers WHERE user_id = ? AND sticker_id = ?").bind(user.id, stickerId).run();
         return c.json({ success: true });
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
