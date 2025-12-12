@@ -131,6 +131,47 @@ export default function Chat() {
         }
     };
 
+    // Context Menu State
+    const [contextMenu, setContextMenu] = useState(null);
+
+    const handleContextMenu = (e, msg) => {
+        e.preventDefault();
+        // Only for stickers sent by OTHERS
+        if (String(msg.sender_id) === String(user.id)) return;
+
+        let url = null;
+        if (msg.content.startsWith('[sticker]')) {
+            url = msg.content.replace('[sticker]', '');
+        }
+
+        if (url) {
+            setContextMenu({ x: e.clientX, y: e.clientY, url });
+        }
+    };
+
+    const saveSticker = async () => {
+        if (!contextMenu) return;
+        try {
+            const res = await fetch(`${API_URL}/api/stickers/collect`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ url: contextMenu.url })
+            });
+            if (res.ok) alert('已收藏表情');
+        } catch (e) { console.error(e); }
+        setContextMenu(null);
+    };
+
+    // Close menu on click elsewhere
+    useEffect(() => {
+        const h = () => setContextMenu(null);
+        window.addEventListener('click', h);
+        return () => window.removeEventListener('click', h);
+    }, []);
+
     const renderMessage = (msg) => {
         const isMe = String(msg.sender_id) === String(user.id);
         let content = msg.content;
@@ -143,13 +184,17 @@ export default function Chat() {
 
         return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
-                <div className={`max-w-[75%] rounded-2xl p-4 shadow-sm ${isMe ? 'bg-haze-600 text-white rounded-br-none' : 'bg-white text-ink border border-oat-200 rounded-bl-none'}`}>
+                <div
+                    onContextMenu={(e) => type === 'sticker' && handleContextMenu(e, msg)}
+                    className={`max-w-[75%] rounded-2xl p-4 shadow-sm relative ${isMe ? 'bg-haze-600 text-white rounded-br-none' : 'bg-white text-ink border border-oat-200 rounded-bl-none'}`}
+                >
                     {type === 'text' && <p>{content}</p>}
                     {type === 'image' && <img src={content} alt="img" className="rounded-lg max-h-60 cursor-pointer" onClick={() => window.open(content)} />}
                     {type === 'sticker' && <img src={content} alt="sticker" className="w-32 h-32 object-contain" />}
                     {type === 'voice' && (
                         <div className="flex items-center gap-2">
                             <Mic size={16} />
+                            {/* Quick audio player */}
                             <audio controls src={content} className="h-8 w-48" />
                         </div>
                     )}
@@ -181,9 +226,20 @@ export default function Chat() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 relative">
                 {messages.map(renderMessage)}
                 <div ref={scrollRef} />
+
+                {contextMenu && (
+                    <div
+                        className="fixed bg-white shadow-xl rounded-lg border border-oat-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
+                        style={{ top: contextMenu.y, left: contextMenu.x }}
+                    >
+                        <button onClick={saveSticker} className="w-full text-left px-4 py-2 hover:bg-oat-100 text-sm text-ink">
+                            收藏表情
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Input */}

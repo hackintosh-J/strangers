@@ -139,10 +139,23 @@ app.get('/api/stickers/mine', authMiddleware, async (c) => {
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
 
-app.post('/api/stickers/:id/collect', authMiddleware, async (c) => {
-    const stickerId = c.req.param('id');
+app.post('/api/stickers/collect', authMiddleware, async (c) => {
+    const { id, url } = await c.req.json();
     const user = c.get('jwtPayload');
     try {
+        let stickerId = id;
+        if (!stickerId && url) {
+            const existing = await c.env.DB.prepare("SELECT id FROM stickers WHERE url = ?").bind(url).first();
+            if (existing) stickerId = existing.id;
+            else {
+                // Auto-create sticker record if it doesn't exist (e.g. from system or legacy)
+                const res = await c.env.DB.prepare("INSERT INTO stickers (url) VALUES (?)").bind(url).run();
+                stickerId = res.meta.last_row_id;
+            }
+        }
+
+        if (!stickerId) return c.json({ error: 'Sticker not found' }, 404);
+
         await c.env.DB.prepare(
             "INSERT OR IGNORE INTO user_stickers (user_id, sticker_id) VALUES (?, ?)"
         ).bind(user.id, stickerId).run();

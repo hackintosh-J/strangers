@@ -228,12 +228,16 @@ export default function Echo() {
                                 }
                             `}>
                                 {/* Aggressively remove all leading whitespace/newlines */}
-                                {msg.content.replace(/^\s+/, '').split('\n').map((line, i) => (
-                                    <React.Fragment key={i}>
-                                        {line}
-                                        {i !== msg.content.replace(/^\s+/, '').split('\n').length - 1 && <br />}
-                                    </React.Fragment>
-                                ))}
+                                {msg.content.startsWith('[image]') ? (
+                                    <img src={msg.content.replace('[image]', '')} alt="Uploaded to AI" className="rounded-lg max-h-60" />
+                                ) : (
+                                    msg.content.replace(/^\s+/, '').split('\n').map((line, i) => (
+                                        <React.Fragment key={i}>
+                                            {line}
+                                            {i !== msg.content.replace(/^\s+/, '').split('\n').length - 1 && <br />}
+                                        </React.Fragment>
+                                    ))
+                                )}
                             </div>
                         </div>
                     ))}
@@ -255,28 +259,60 @@ export default function Echo() {
                             ))}
                         </div>
                     )}
-                    <div className="relative flex items-center gap-2">
-                        <input
-                            className="input-morandi pr-12"
-                            placeholder="说点什么..."
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && !loading && handleSend()}
-                            disabled={loading}
-                        />
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim() || loading}
-                            className="absolute right-2 p-2 bg-haze-500 text-white rounded-lg hover:bg-haze-600 disabled:opacity-50 disabled:bg-oat-300 transition-all"
-                        >
-                            {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                        </button>
-                    </div>
-                    <p className="text-center text-[10px] text-oat-300 mt-2">
-                        Echo 由 AI 驱动，内容仅供参考。
-                    </p>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="echo-img-upload"
+                        onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            try {
+                                setLoading(true);
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                const res = await fetch(`${API_URL}/api/upload`, {
+                                    method: 'PUT',
+                                    headers: { 'Authorization': `Bearer ${token}` },
+                                    body: formData
+                                });
+                                if (res.ok) {
+                                    const { url } = await res.json();
+                                    // Send as image message. Note: Backend AI needs to know this is an image.
+                                    // Current simple implementation: Append URL to prompt or handle structurally.
+                                    // Let's send a specific message structure or just text for now.
+                                    // "Please look at this image: [url]"
+                                    handleSend(`[image]${url}`);
+                                }
+                            } catch (err) { console.error(err); }
+                            finally { setLoading(false); }
+                        }}
+                    />
+                    <label htmlFor="echo-img-upload" className="p-2 text-oat-400 hover:text-haze-500 cursor-pointer transition-colors">
+                        <BookOpen size={20} /> {/* Reusing icon for visual simplicity or import Image icon */}
+                    </label>
+
+                    <input
+                        className="input-morandi pr-12"
+                        placeholder="说点什么..."
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && !loading && handleSend()}
+                        disabled={loading}
+                    />
+                    <button
+                        onClick={() => handleSend()}
+                        disabled={!input.trim() || loading}
+                        className="absolute right-2 p-2 bg-haze-500 text-white rounded-lg hover:bg-haze-600 disabled:opacity-50 disabled:bg-oat-300 transition-all"
+                    >
+                        {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                    </button>
                 </div>
-            </main>
+                <p className="text-center text-[10px] text-oat-300 mt-2">
+                    Echo 由 AI 驱动，内容仅供参考。
+                </p>
         </div>
+            </main >
+        </div >
     );
 }
