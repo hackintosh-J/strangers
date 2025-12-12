@@ -423,7 +423,10 @@ app.get('/api/messages', async (c) => {
                 (SELECT COUNT(*) FROM comments WHERE message_id = m.id) * 2 + 
                 (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) * 3)
                 / 
-                POWER((CAST(strftime('%s', 'now') AS INTEGER) - m.created_at) / 3600.0 + 2, 1.5)
+                (
+                    ((CAST(strftime('%s', 'now') AS INTEGER) - m.created_at) / 3600.0 + 2) * 
+                    ((CAST(strftime('%s', 'now') AS INTEGER) - m.created_at) / 3600.0 + 2)
+                )
             ) DESC LIMIT ?`;
             params.push(parseInt(limit));
         } else {
