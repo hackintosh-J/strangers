@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
-import { Send, Zap, BookOpen, Loader2, ImageIcon } from 'lucide-react';
+import { Send, Zap, BookOpen, Loader2, ImageIcon, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { compressImage } from '../utils/compress';
 
@@ -14,6 +14,7 @@ export default function Echo() {
     const [summarizing, setSummarizing] = useState(false);
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
+    const [attachment, setAttachment] = useState(null);
 
     // Greeting Logic
     const [greeting, setGreeting] = useState('');
@@ -59,15 +60,22 @@ export default function Echo() {
     useEffect(scrollToBottom, [messages]);
 
     const handleSend = async (textOverride = null) => {
-        // Fix: onClick passes an event object, which causes crash on logic below. Check type.
         const isString = typeof textOverride === 'string';
         const textToSend = isString ? textOverride : input;
 
-        if (!textToSend.trim() || loading) return;
+        // Check text OR attachment
+        if ((!textToSend.trim() && !attachment) || loading) return;
 
-        const userMsg = { role: 'user', content: textToSend };
+        // Construct Content
+        let finalContent = textToSend;
+        if (attachment && !textOverride) {
+            finalContent = `${textToSend} [image]${attachment.url}`;
+        }
+
+        const userMsg = { role: 'user', content: finalContent };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
+        setAttachment(null); // Clear attachment
         setLoading(true);
 
         try {
@@ -234,16 +242,28 @@ export default function Echo() {
                                     : 'bg-oat-100 text-ink rounded-tl-none'
                                 }
                             `}>
-                                {msg.content.startsWith('[image]') ? (
-                                    <img src={msg.content.replace('[image]', '')} alt="Uploaded to AI" className="rounded-lg max-h-60" />
-                                ) : (
-                                    msg.content.replace(/^\s+/, '').split('\n').map((line, i) => (
-                                        <React.Fragment key={i}>
-                                            {line}
-                                            {i !== msg.content.replace(/^\s+/, '').split('\n').length - 1 && <br />}
-                                        </React.Fragment>
-                                    ))
-                                )}
+                                {(() => {
+                                    // Robust rendering for mixed text/image
+                                    const parts = msg.content.split(/(\[image\]https?:\/\/[^\s]+)/g);
+                                    return parts.map((part, pIdx) => {
+                                        if (part.startsWith('[image]')) {
+                                            const src = part.replace('[image]', '');
+                                            return <img key={pIdx} src={src} alt="content" className="rounded-lg max-h-60 my-2 block" />;
+                                        }
+                                        if (!part.trim()) return null;
+                                        // Render Text with newlines
+                                        return (
+                                            <span key={pIdx}>
+                                                {part.split('\n').map((line, lIdx) => (
+                                                    <React.Fragment key={lIdx}>
+                                                        {line}
+                                                        {lIdx !== part.split('\n').length - 1 && <br />}
+                                                    </React.Fragment>
+                                                ))}
+                                            </span>
+                                        );
+                                    });
+                                })()}
                             </div>
                         </div>
                     ))}
@@ -291,9 +311,9 @@ export default function Echo() {
                                     });
                                     if (res.ok) {
                                         const { url } = await res.json();
-                                        // Don't send immediately. Append to input for context asking.
-                                        setInput(prev => prev + (prev ? '\n' : '') + `[image]${url} `);
-                                        // Focus input if you want
+                                        setAttachment({ url, name: file.name });
+                                        // clear input file value so allow same file recheck?
+                                        e.target.value = '';
                                     } else {
                                         const err = await res.json();
                                         alert(err.error || '上传失败');
@@ -309,6 +329,22 @@ export default function Echo() {
                             <ImageIcon size={20} />
                         </label>
 
+                        {/* Attachment Preview */}
+                        {attachment && (
+                            <div className="absolute bottom-full mb-2 left-0 bg-white p-2 rounded-lg shadow-soft border border-oat-200 flex items-center gap-2 animate-fade-in-up">
+                                <div className="w-12 h-12 rounded bg-oat-100 overflow-hidden relative">
+                                    <img src={attachment.url} alt="preview" className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-xs text-oat-500 max-w-[100px] truncate">{attachment.name}</span>
+                                <button
+                                    onClick={() => setAttachment(null)}
+                                    className="p-1 rounded-full hover:bg-rose-100 text-oat-400 hover:text-rose-500 transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        )}
+
                         <input
                             className="input-morandi pr-12 w-full"
                             placeholder="说点什么..."
@@ -319,7 +355,7 @@ export default function Echo() {
                         />
                         <button
                             onClick={() => handleSend()}
-                            disabled={!input.trim() || loading}
+                            disabled={(!input.trim() && !attachment) || loading}
                             className="p-2 bg-haze-500 text-white rounded-lg hover:bg-haze-600 disabled:opacity-50 disabled:bg-oat-300 transition-all"
                         >
                             {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
