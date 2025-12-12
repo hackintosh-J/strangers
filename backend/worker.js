@@ -216,6 +216,90 @@ app.get('/api/channels/:slug/messages', async (c) => {
     }
 });
 
+// --- AI APIs (Echo) ---
+app.post('/api/ai/chat', authMiddleware, async (c) => {
+    // SECURITY NOTE: In production, API Key should be a secret.
+    // User provided key for demo:
+    const API_KEY = 'adf746b4a738493c93677d9fc4849f9a.KWoGiZeEepL0UbtT';
+
+    try {
+        const { messages } = await c.req.json();
+
+        // System Prompt to define persona
+        const systemMessage = {
+            role: "system",
+            content: "你是 Echo，一个温暖、理智且富有同理心的成年人朋友。你不是AI助手，不要说'我可以帮你做什么'，而是像朋友一样倾听和对话。你的回复简短、自然，像是在聊天软件上打字一样。不要说教，不要评判。如果用户表达了负面情绪，给予理解和陪伴。"
+        };
+
+        const allMessages = [systemMessage, ...messages];
+
+        // Call Zhipu API
+        const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "glm-4-flash", // Using Flash model as requested for speed/cost
+                messages: allMessages,
+                stream: true
+            })
+        });
+
+        // Forward the stream directly
+        const { readable, writable } = new TransformStream();
+        response.body.pipeTo(writable);
+        return c.newResponse(readable, 200, {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+        });
+
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
+app.post('/api/ai/summarize', authMiddleware, async (c) => {
+    const API_KEY = 'adf746b4a738493c93677d9fc4849f9a.KWoGiZeEepL0UbtT';
+    try {
+        const { messages } = await c.req.json();
+
+        const systemMessage = {
+            role: "system",
+            content: "你是一个情感敏锐的作家。请分析以下对话，提取用户（User）的核心心事和情感。总结为一篇适合发布在'树洞'的匿名帖子。\n输出JSON格式：\n{\n  \"title\": \"一句话标题（不要太长，文艺一点）\",\n  \"content\": \"核心内容（第一人称，保留情感色彩，去除对话琐碎，整理成一段独白。200字以内。）\"\n}"
+        };
+
+        const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${API_KEY}`
+            },
+            body: JSON.stringify({
+                model: "glm-4-flash",
+                messages: [systemMessage, ...messages],
+                stream: false, // No stream for summarize
+                response_format: { type: "json_object" } // Force JSON if supported, or prompt engineered
+            })
+        });
+
+        const data = await response.json();
+        // Zhipu might return content as string, need to parse if it's JSON string in content
+        let contentStr = data.choices[0].message.content;
+
+        // Clean up markdown code blocks if present
+        contentStr = contentStr.replace(/```json\n?|```/g, '');
+
+        const result = JSON.parse(contentStr);
+        return c.json(result);
+
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
+
 // --- Drifting (Bottle) APIs ---
 app.get('/api/bottles/random', async (c) => {
     try {

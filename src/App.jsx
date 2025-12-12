@@ -9,6 +9,8 @@ import About from './pages/About';
 import ChannelFeed from './pages/ChannelFeed';
 import PostDetail from './pages/PostDetail';
 import Drifting from './pages/Drifting';
+import Echo from './pages/Echo';
+import { useAuth } from './hooks/useAuth';
 
 function App() {
     return (
@@ -20,6 +22,7 @@ function App() {
                     <Route path="/channel/:slug" element={<ChannelFeed />} />
                     <Route path="/post/:id" element={<PostDetail />} />
                     <Route path="/drifting" element={<Drifting />} />
+                    <Route path="/echo" element={<Echo />} />
 
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin" element={<Admin />} />

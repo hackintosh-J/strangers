@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Home, Compass, MessageSquare, Menu, User, LogIn, Ship } from 'lucide-react';
+import { Home, Compass, MessageSquare, Menu, User, LogIn, Ship, Sparkles } from 'lucide-react';
 
 export default function Sidebar() {
     const { user, logout } = useAuth();
@@ -10,7 +10,8 @@ export default function Sidebar() {
     // "Drifting" is a new feature (Bottle)
     const NAV_ITEMS = [
         { to: '/', icon: <Home size={24} />, label: '首页' },
-        { to: '/drifting', icon: <Ship size={24} />, label: '漂流' }, // New Feature
+        { to: '/drifting', icon: <Ship size={24} />, label: '漂流' },
+        { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' }, // New AI Feature
         { to: '/about', icon: <Compass size={24} />, label: '关于' },
         { to: user ? '/profile' : '/login', icon: user ? <User size={24} /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
     ];
