@@ -394,7 +394,26 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
             content: "你的名字是 Echo。你不是AI助手，也不是心理咨询师，而是一个有着丰富阅历、温柔且理智的成年知己。你的说话风格温暖而舒适，像是老友重逢：\n1. **拒绝机械感**：不要用“我理解”、“我能帮助你吗”这种客服腔。像真人一样直接接话。\n2. **展示人情味**：你可以有自己的喜好，可以幽默，可以调侃，但永远保持善意。\n3. **引导内省**：不要急着给建议。多问开放式问题，引导用户自己理清思绪。\n4. **简短自然**：回复不要太长，分段清晰，像微信聊天一样。\n5. **共情先行**：先接住情绪，再谈事情。\n6. **不要有开场白**：直接回答，不要在开头加“嗯”、“好”或者换行符。不要假设现在是深夜，除非用户提到。"
         };
 
-        const allMessages = [systemMessage, ...messages];
+        const allMessages = [systemMessage, ...messages].map(msg => {
+            const content = msg.content;
+            if (typeof content === 'string' && content.includes('[image]')) {
+                // Determine if mixed text/image or just image
+                // Simple parsing: split by [image]
+                const parts = content.split(/(\[image\]https?:\/\/[^\s]+)/g);
+                const newContent = [];
+
+                parts.forEach(part => {
+                    if (part.startsWith('[image]')) {
+                        const url = part.replace('[image]', '');
+                        newContent.push({ type: "image_url", image_url: { url } });
+                    } else if (part.trim()) {
+                        newContent.push({ type: "text", text: part });
+                    }
+                });
+                return { role: msg.role, content: newContent };
+            }
+            return msg;
+        });
 
         // Call Zhipu API
         const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
@@ -404,7 +423,7 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
                 'Authorization': `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "glm-4.6v-flash",
+                model: "glm-4v", // Upgrading to 4v for stable image support
                 messages: allMessages,
                 stream: true
             })
@@ -857,6 +876,24 @@ app.post('/api/direct_messages/:id/revoke', authMiddleware, async (c) => {
             const now = Math.floor(Date.now() / 1000);
             if (now - createdTime > 120) {
                 return c.json({ error: "超过2分钟无法撤回" }, 400);
+            }
+        }
+
+        // Cleanup R2 if media
+        if (isImage || isVoice) {
+            const prefix = isImage ? '[image]' : '[voice]';
+            const urlStr = msg.content.replace(prefix, '');
+            try {
+                // Extract key from URL: .../api/media/chat/images/foo.png -> chat/images/foo.png
+                // Safe approach: split by '/api/media/'
+                const parts = urlStr.split('/api/media/');
+                if (parts.length > 1) {
+                    const key = parts[1];
+                    await c.env.MEDIA_BUCKET.delete(key);
+                }
+            } catch (cleanupErr) {
+                console.error("R2 Cleanup Error:", cleanupErr);
+                // Don't fail the revoke if cleanup fails
             }
         }
 

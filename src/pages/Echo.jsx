@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
 import { Send, Zap, BookOpen, Loader2, ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { compressImage } from '../utils/compress';
 
 export default function Echo() {
     const { user, token } = useAuth();
@@ -267,14 +268,16 @@ export default function Echo() {
                             onChange={async (e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
-                                if (file.size > 5 * 1024 * 1024) {
-                                    alert('文件过大，请选择5MB以下的图片');
-                                    return;
-                                }
+
+                                // Size check handled by compression or server, but keeping soft limit or relying on compression
+                                // If compression fails or file is massive, we catch it.
+
                                 try {
                                     setLoading(true);
+                                    const compressedFile = await compressImage(file);
+
                                     const formData = new FormData();
-                                    formData.append('file', file);
+                                    formData.append('file', compressedFile);
                                     const res = await fetch(`${API_URL}/api/upload`, {
                                         method: 'POST',
                                         headers: { 'Authorization': `Bearer ${token}` },

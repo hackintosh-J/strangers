@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import { useAuth } from '../hooks/useAuth';
 import { Send, ArrowLeft, Loader2, RefreshCw, Mic, Smile, ImageIcon } from 'lucide-react';
 import StickerPicker from '../components/StickerPicker';
+import { compressImage } from '../utils/compress';
 
 export default function Chat() {
     const { id } = useParams();
@@ -27,7 +28,7 @@ export default function Chat() {
         if (!token) return;
 
         // Fetch Partner Info
-        fetch(`${API_URL}/api/users/${id}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${API_URL} /api/users / ${id}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => setTargetUser(data))
             .catch(console.error);
@@ -95,10 +96,12 @@ export default function Chat() {
         const file = e.target.files[0];
         if (!file) return;
 
-        // Quick upload logic
-        const formData = new FormData();
-        formData.append('file', file);
         try {
+            setSending(true);
+            const compressedFile = await compressImage(file);
+
+            const formData = new FormData();
+            formData.append('file', compressedFile);
             const res = await fetch(`${API_URL}/api/upload`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -152,8 +155,8 @@ export default function Chat() {
 
     const handleContextMenu = (e, msg) => {
         e.preventDefault();
-        // Only for stickers sent by OTHERS
-        if (String(msg.sender_id) === String(user.id)) return;
+        e.preventDefault();
+        // Allow menu for own messages (Recall) and others (Sticker collect)
 
         let url = null;
         if (msg.content.startsWith('[sticker]')) {
