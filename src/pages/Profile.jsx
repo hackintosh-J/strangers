@@ -28,18 +28,44 @@ export default function Profile() {
         }
 
         const fetchProfile = async () => {
+            // Check Cache
+            const cacheKey = `profile_cache_${targetId}`;
+            const cached = sessionStorage.getItem(cacheKey);
+            if (cached) {
+                const { user, stats, isFollowing, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < 60000) { // 1 min cache
+                    setProfileUser(user);
+                    setStats(stats);
+                    setIsFollowing(isFollowing);
+                    setLoading(false);
+                    // Still fetch in background to update if needed? No, user wants specific optimization.
+                    return;
+                }
+            }
+
             try {
                 const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
                 const res = await fetch(`${API_URL}/api/users/${targetId}/profile`, { headers });
                 if (res.ok) {
                     const data = await res.json();
                     setProfileUser(data.user);
-                    setStats({
+
+                    const newStats = {
                         followers_count: data.user.followers_count || 0,
                         following_count: data.user.following_count || 0,
                         post_count: data.user.post_count || 0
-                    });
+                    };
+                    setStats(newStats);
                     setIsFollowing(data.is_following);
+
+                    // Set Cache
+                    sessionStorage.setItem(cacheKey, JSON.stringify({
+                        user: data.user,
+                        stats: newStats,
+                        isFollowing: data.is_following,
+                        timestamp: Date.now()
+                    }));
+
                 } else {
                     // Handle 404
                 }

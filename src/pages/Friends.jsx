@@ -13,16 +13,36 @@ export default function Friends() {
 
     useEffect(() => {
         if (!token) return;
+
+        // Check Cache
+        const cacheKey = `friends_cache_${user?.id}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+            const { data, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < 60000) { // 1 min cache
+                setFriends(data);
+                setLoading(false);
+                return; // Skip fetch if cached
+            }
+        }
+
         fetch(`${API_URL}/api/friends`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data)) setFriends(data);
+                if (Array.isArray(data)) {
+                    setFriends(data);
+                    // Set Cache
+                    sessionStorage.setItem(cacheKey, JSON.stringify({
+                        data,
+                        timestamp: Date.now()
+                    }));
+                }
             })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [token]);
+    }, [token, user?.id]);
 
     return (
         <div className="flex min-h-screen bg-paper">
