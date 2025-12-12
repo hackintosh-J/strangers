@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { ArrowLeft, Send, MailOpen, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import oceanBg from '../assets/ocean.png';
 
 export default function Drifting() {
     const { user, token } = useAuth();
@@ -74,10 +75,13 @@ export default function Drifting() {
 
             <main className="flex-1 relative w-full h-full flex flex-col items-center justify-center p-4">
 
+
+
+                // ... (inside component)
                 {/* Background Image */}
                 <div className="absolute inset-0 z-0">
                     <img
-                        src="/mysterious_ocean_background_1765500013634.png"
+                        src={oceanBg}
                         alt="Ocean Background"
                         className="w-full h-full object-cover opacity-80"
                     />
