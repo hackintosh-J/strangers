@@ -100,15 +100,18 @@ export default function Chat() {
         formData.append('file', file);
         try {
             const res = await fetch(`${API_URL}/api/upload`, {
-                method: 'PUT',
+                method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
             if (res.ok) {
                 const { url } = await res.json();
                 handleSend(formatPayload(url, 'image'));
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Upload failed');
             }
-        } catch (e) { alert('Upload failed'); }
+        } catch (e) { alert('Upload error: ' + e.message); }
     };
 
     const toggleRecord = async () => {
@@ -128,7 +131,7 @@ export default function Chat() {
                     const formData = new FormData();
                     formData.append('file', file);
                     const res = await fetch(`${API_URL}/api/upload`, {
-                        method: 'PUT',
+                        method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` },
                         body: formData
                     });
@@ -158,7 +161,12 @@ export default function Chat() {
         }
 
         if (url) {
-            setContextMenu({ x: e.clientX, y: e.clientY, url });
+            setContextMenu({ x: e.clientX, y: e.clientY, url, msgId: msg.id, isMyMsg: String(msg.sender_id) === String(user.id), type: 'sticker', content: msg.created_at });
+        } else {
+            // Generic context menu for recall (text/image/voice)
+            if (String(msg.sender_id) === String(user.id)) {
+                setContextMenu({ x: e.clientX, y: e.clientY, msgId: msg.id, isMyMsg: true, content: msg.created_at, type: 'other' });
+            }
         }
     };
 
@@ -175,6 +183,24 @@ export default function Chat() {
             });
             if (res.ok) alert('已收藏表情');
         } catch (e) { console.error(e); }
+        setContextMenu(null);
+    };
+
+    const handleRecall = async () => {
+        if (!contextMenu || !contextMenu.msgId) return;
+        try {
+            const res = await fetch(`${API_URL}/api/direct_messages/${contextMenu.msgId}/revoke`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                // Remove locally
+                setMessages(prev => prev.filter(m => m.id !== contextMenu.msgId));
+            } else {
+                const err = await res.json();
+                alert(err.error || '撤回失败');
+            }
+        } catch (e) { alert('撤回出错'); }
         setContextMenu(null);
     };
 
@@ -198,7 +224,7 @@ export default function Chat() {
         return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                 <div
-                    onContextMenu={(e) => type === 'sticker' && handleContextMenu(e, msg)}
+                    onContextMenu={(e) => handleContextMenu(e, msg)}
                     className={`max-w-[75%] rounded-2xl p-4 shadow-sm relative ${isMe ? 'bg-haze-600 text-white rounded-br-none' : 'bg-white text-ink border border-oat-200 rounded-bl-none'}`}
                 >
                     {type === 'text' && <p>{content}</p>}
@@ -248,9 +274,14 @@ export default function Chat() {
                         className="fixed bg-white shadow-xl rounded-lg border border-oat-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100"
                         style={{ top: contextMenu.y, left: contextMenu.x }}
                     >
-                        <button onClick={saveSticker} className="w-full text-left px-4 py-2 hover:bg-oat-100 text-sm text-ink">
+                        <button onClick={saveSticker} className={`w-full text-left px-4 py-2 hover:bg-oat-100 text-sm text-ink ${!contextMenu.url ? 'hidden' : ''}`}>
                             收藏表情
                         </button>
+                        {contextMenu.isMyMsg && (
+                            <button onClick={handleRecall} className="w-full text-left px-4 py-2 hover:bg-oat-100 text-sm text-red-500">
+                                撤回
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

@@ -276,7 +276,7 @@ export default function Echo() {
                                     const formData = new FormData();
                                     formData.append('file', file);
                                     const res = await fetch(`${API_URL}/api/upload`, {
-                                        method: 'PUT',
+                                        method: 'POST',
                                         headers: { 'Authorization': `Bearer ${token}` },
                                         body: formData
                                     });

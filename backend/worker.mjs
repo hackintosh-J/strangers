@@ -61,18 +61,23 @@ const authMiddleware = async (c, next) => {
 // --- Multimedia Routes (R2) ---
 // 1. Get Presigned URL (or Upload Proxy)
 // For simplicity and small files, we proxy upload through Worker for now.
-app.put('/api/upload', authMiddleware, async (c) => {
+app.post('/api/upload', authMiddleware, async (c) => {
     try {
         const body = await c.req.parseBody();
         const file = body['file']; // Multipart form data
 
-        if (!file || !(file instanceof File)) {
+        if (!file) {
             return c.json({ error: 'No file uploaded' }, 400);
+        }
+
+        // Relaxed check: just ensure it has a type and stream/buffer
+        if (!file.type && !file.name) {
+            return c.json({ error: 'Invalid file object received' }, 400);
         }
 
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/ogg', 'audio/webm', 'audio/wav'];
         if (!allowedTypes.includes(file.type)) {
-            return c.json({ error: 'Invalid file type' }, 400);
+            return c.json({ error: `Invalid file type: ${file.type || 'unknown'}` }, 400);
         }
 
         if (file.size > 5 * 1024 * 1024) { // 5MB limit
@@ -81,7 +86,7 @@ app.put('/api/upload', authMiddleware, async (c) => {
 
         const ext = file.type.split('/')[1];
         const filename = `${crypto.randomUUID()}.${ext}`;
-        const user = c.get('jwtPayload');
+        // const user = c.get('jwtPayload'); // Unused
 
         // Structure: /<type>/<filename>
         // We determine type by mime.
@@ -91,7 +96,10 @@ app.put('/api/upload', authMiddleware, async (c) => {
 
         const key = `${folder}/${filename}`;
 
-        await c.env.MEDIA_BUCKET.put(key, file.stream(), {
+        // Handle File object (standard) or older Hono file handling
+        const stream = file.stream ? file.stream() : file;
+
+        await c.env.MEDIA_BUCKET.put(key, stream, {
             httpMetadata: { contentType: file.type }
         });
 
@@ -101,8 +109,23 @@ app.put('/api/upload', authMiddleware, async (c) => {
 
         return c.json({ url: publicUrl });
     } catch (e) {
-        return c.json({ error: e.message }, 500);
+        return c.json({ error: e.message, stack: e.stack }, 500);
     }
+});
+
+// 2. Serve Media
+app.get('/api/media/:folder/:filename', async (c) => {
+    const { folder, filename } = c.req.param();
+    const key = `${folder}/${filename}`;
+
+    const object = await c.env.MEDIA_BUCKET.get(key);
+    if (!object) return c.text('404 Not Found', 404);
+
+    const headers = new Headers();
+    object.writeHttpMetadata(headers);
+    headers.set('etag', object.httpEtag);
+
+    return new Response(object.body, { headers });
 });
 
 // --- Sticker Routes ---
@@ -782,6 +805,51 @@ app.post('/api/direct_messages', authMiddleware, async (c) => {
     ).bind(user.id, receiver_id, content).run();
 
     return c.json({ success: true });
+});
+
+// Revoke DM
+app.post('/api/direct_messages/:id/revoke', authMiddleware, async (c) => {
+    const msgId = c.req.param('id');
+    const user = c.get('jwtPayload');
+
+    try {
+        const msg = await c.env.DB.prepare("SELECT * FROM direct_messages WHERE id = ?").bind(msgId).first();
+        if (!msg) return c.json({ error: "Message not found" }, 404);
+
+        if (String(msg.sender_id) !== String(user.id)) {
+            return c.json({ error: "Forbidden" }, 403);
+        }
+
+        // Logic: Text/Voice < 2 mins. Image/Sticker unlimited.
+        const isImage = msg.content.startsWith('[image]');
+        const isSticker = msg.content.startsWith('[sticker]');
+        const isVoice = msg.content.startsWith('[voice]');
+
+        if (!isImage && !isSticker) {
+            // Text or Voice -> 2 minute limit
+            // Note: msg.created_at in SQLite might be integer (seconds) or string.
+            // Based on previous code: `Math.floor(Date.now() / 1000)` was used for last_active_at.
+            // Let's check `schema.sql` if possible, but safely assuming we can handle integer or string.
+            // If integer:
+            let createdTime = msg.created_at;
+            // If string (ISO): parse it.
+            if (typeof createdTime === 'string') {
+                createdTime = Math.floor(new Date(createdTime).getTime() / 1000);
+            }
+            // If createdTime is NaN (e.g. invalid string), we might fail. 
+            // But let's assume valid DB data.
+
+            const now = Math.floor(Date.now() / 1000);
+            if (now - createdTime > 120) {
+                return c.json({ error: "超过2分钟无法撤回" }, 400);
+            }
+        }
+
+        await c.env.DB.prepare("DELETE FROM direct_messages WHERE id = ?").bind(msgId).run();
+        return c.json({ success: true });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
 });
 
 // Public Profile
