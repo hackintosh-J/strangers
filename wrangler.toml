@@ -3,7 +3,7 @@ main = "backend/worker.mjs"
 compatibility_date = "2024-01-01"
 
 [[routes]]
-pattern = "api.strangers.hackins.club/*"
+pattern = "api.strangers.hackins.club"
 custom_domain = true
 
 [[d1_databases]]
