@@ -26,21 +26,7 @@ export default function Dashboard() {
             .catch(console.error);
     }, []);
 
-    const ChannelCard = ({ channel }) => (
-        <Link to={`/channel/${channel.slug}`} className="block group">
-            <div className="bg-white rounded-2xl p-6 border border-oat-200 shadow-soft transition-all h-full flex flex-col items-center text-center hover:shadow-float">
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 transform grayscale group-hover:grayscale-0">
-                    {channel.icon}
-                </div>
-                <h3 className="text-xl font-serif font-bold text-ink mb-2">{channel.name}</h3>
-                <p className="text-oat-400 text-sm line-clamp-2">{channel.description}</p>
-                <div className="mt-auto pt-4 flex items-center gap-1 text-haze-400 text-sm font-medium group-hover:text-haze-600">
-                    <span>进入板块</span>
-                    <ArrowRight size={16} />
-                </div>
-            </div>
-        </Link>
-    );
+
 
     return (
         <div className="flex min-h-screen bg-paper">
@@ -59,29 +45,8 @@ export default function Dashboard() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
                 </div>
 
-                {/* Channels Grid */}
+                {/* Hot Topics (Dominant) */}
                 <section className="mb-12">
-                    <div className="flex items-center gap-2 mb-6 text-ink font-serif font-bold text-xl">
-                        <span className="w-1 h-6 bg-haze-400 rounded-full" />
-                        <h2>探索板块</h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {channels.length > 0 ? channels.map(c => (
-                            <ChannelCard key={c.id} channel={c} />
-                        )) : (
-                            // Skeleton / Fallback while fetching or if empty
-                            <>
-                                <div className="h-48 bg-oat-50 rounded-2xl animate-pulse" />
-                                <div className="h-48 bg-oat-50 rounded-2xl animate-pulse" />
-                                <div className="h-48 bg-oat-50 rounded-2xl animate-pulse" />
-                            </>
-                        )}
-                    </div>
-                </section>
-
-                {/* Latest / Hot */}
-                <section>
                     <div className="flex items-center gap-2 mb-6 text-ink font-serif font-bold text-xl">
                         <Flame size={20} className="text-rose-400 fill-rose-400" />
                         <h2>热门动态</h2>
@@ -127,6 +92,25 @@ export default function Dashboard() {
                                 正在加载热门内容...
                             </div>
                         )}
+                    </div>
+                </section>
+
+                {/* Channels (Minimal Row) */}
+                <section className="mb-24 md:mb-8">
+                    <div className="flex items-center gap-2 mb-4 text-ink font-serif font-bold text-lg opacity-80">
+                        <span className="w-1 h-5 bg-oat-400 rounded-full" />
+                        <h2>探索板块</h2>
+                    </div>
+
+                    <div className="flex items-center gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                        {channels.map(c => (
+                            <Link key={c.id} to={`/channel/${c.slug}`} className="flex flex-col items-center gap-2 min-w-[4rem] group">
+                                <div className="w-16 h-16 rounded-full bg-white border border-oat-200 shadow-sm flex items-center justify-center text-2xl group-hover:scale-110 group-hover:border-haze-300 transition-all">
+                                    {c.icon}
+                                </div>
+                                <span className="text-xs text-oat-500 font-medium group-hover:text-haze-600 transition-colors">{c.name}</span>
+                            </Link>
+                        ))}
                     </div>
                 </section>
 

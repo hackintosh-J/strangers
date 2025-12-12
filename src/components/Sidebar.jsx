@@ -47,8 +47,8 @@ export default function Sidebar() {
                     {icon}
                     {isActive && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-haze-500 rounded-full md:hidden" />}
                 </div>
-                {/* Hide text on mobile to prevent crowding */}
-                <span className="hidden md:block text-sm font-medium tracking-wide">{label}</span>
+                {/* Show text on mobile, smaller */}
+                <span className="text-[10px] md:text-sm font-medium tracking-wide">{label}</span>
             </Link>
         );
     };
