@@ -30,7 +30,10 @@ export default function ChannelFeed() {
     const CHANNEL_INFO = {
         'help': { name: '解忧杂货店', desc: '每一个烦恼都值得被温柔以待' },
         'hollow': { name: '树洞', desc: '说出你的秘密，风会带走它' },
-        'stories': { name: '故事集', desc: '路过全世界，路过你' },
+        'stories': { name: '故事集', desc: '长篇叙事，分享你的人生片段' },
+        'tech': { name: '极客公园', desc: '探讨技术与未来' },
+        'music': { name: '音乐分享', desc: '一首歌，一个故事' },
+        'books': { name: '深夜书房', desc: '阅读与思考' },
     };
 
     const info = CHANNEL_INFO[slug] || { name: '未知板块', desc: '' };

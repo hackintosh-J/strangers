@@ -22,8 +22,18 @@ export default function Admin() {
 
     const fetchMessages = async () => {
         try {
-            const res = await fetch(`${API_URL}/api/messages`);
-            if (res.ok) setMessages(await res.json());
+            const res = await fetch(`${API_URL}/api/messages?limit=100`); // Fetch more for admin
+            if (res.ok) {
+                const data = await res.json();
+                // API returns { data: [...], next_cursor: ... }
+                if (data.data && Array.isArray(data.data)) {
+                    setMessages(data.data);
+                } else if (Array.isArray(data)) {
+                    setMessages(data);
+                } else {
+                    setMessages([]);
+                }
+            }
         } catch (e) { console.error(e); }
     };
 
@@ -33,11 +43,21 @@ export default function Admin() {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
-                setUsers(await res.json());
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setUsers(data);
+                } else {
+                    setUsers([]);
+                }
             } else {
+                if (res.status === 401) {
+                    alert("登录已过期，请重新登录");
+                    // Redirect to login or logout
+                    // window.location.href = '/login'; 
+                    return;
+                }
                 const data = await res.json();
                 console.error('Fetch users failed:', data);
-                alert('无法获取用户列表: ' + (data.error || res.status));
             }
         } catch (e) { console.error(e); }
     };

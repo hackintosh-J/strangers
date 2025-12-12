@@ -74,34 +74,41 @@ export default function Drifting() {
 
             <main className="flex-1 relative w-full h-full flex flex-col items-center justify-center p-4">
 
-                {/* Background Gradient & Animated Waves */}
-                <div className="absolute inset-0 z-0 bg-gradient-to-b from-blue-100 to-blue-300 opacity-30 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-haze-200/40 rounded-t-[50%] blur-3xl animate-pulse" />
-                <div className="absolute bottom-0 left-0 right-0 h-64 wave-pattern opacity-20" />
+                {/* Background Image */}
+                <div className="absolute inset-0 z-0">
+                    <img
+                        src="/mysterious_ocean_background_1765500013634.png"
+                        alt="Ocean Background"
+                        className="w-full h-full object-cover opacity-80"
+                    />
+                    <div className="absolute inset-0 bg-haze-100/30 backdrop-blur-[2px]" />
+                </div>
+                {/* <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-haze-200/40 rounded-t-[50%] blur-3xl animate-pulse" /> */}
+                <div className="absolute bottom-0 left-0 right-0 h-48 wave-pattern opacity-40 z-0" />
 
                 {/* Main Content */}
-                <div className="z-10 text-center animate-fade-in">
+                <div className="z-10 text-center animate-fade-in flex flex-col items-center justify-center h-full pb-20 md:pb-0">
                     <h1 className="text-4xl md:text-6xl font-serif font-bold text-haze-800 mb-6 drop-shadow-sm">漂流瓶</h1>
                     <p className="text-haze-600 mb-12 text-lg font-serif italic">
                         有些话，只能说给大海听。
                     </p>
 
-                    <div className="flex flex-col md:flex-row gap-6 md:gap-12">
+                    <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center justify-center">
                         <button
                             onClick={() => setMode('throw')}
-                            className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-white shadow-float hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-4 group border border-oat-200 hover:border-haze-300"
+                            className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-white/90 backdrop-blur shadow-float hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-2 group border border-oat-200 hover:border-haze-300"
                         >
-                            <Send size={32} className="text-haze-400 group-hover:text-haze-600 transition-colors" />
-                            <span className="font-serif font-bold text-ink">扔一个</span>
+                            <Send size={28} className="text-haze-400 group-hover:text-haze-600 transition-colors md:w-8 md:h-8" />
+                            <span className="font-serif font-bold text-ink text-sm md:text-base">扔一个</span>
                         </button>
 
                         <button
                             onClick={pickBottle}
                             disabled={loading}
-                            className="w-40 h-40 md:w-48 md:h-48 rounded-full bg-white shadow-float hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-4 group border border-oat-200 hover:border-haze-300"
+                            className="w-32 h-32 md:w-48 md:h-48 rounded-full bg-white/90 backdrop-blur shadow-float hover:scale-105 active:scale-95 transition-all flex flex-col items-center justify-center gap-2 group border border-oat-200 hover:border-haze-300"
                         >
-                            {loading ? <Loader2 size={32} className="animate-spin text-oat-400" /> : <MailOpen size={32} className="text-rose-400 group-hover:text-rose-600 transition-colors" />}
-                            <span className="font-serif font-bold text-ink">捞一个</span>
+                            {loading ? <Loader2 size={28} className="animate-spin text-oat-400" /> : <MailOpen size={28} className="text-rose-400 group-hover:text-rose-600 transition-colors md:w-8 md:h-8" />}
+                            <span className="font-serif font-bold text-ink text-sm md:text-base">捞一个</span>
                         </button>
                     </div>
                 </div>
