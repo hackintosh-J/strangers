@@ -225,10 +225,10 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
     try {
         const { messages } = await c.req.json();
 
-        // System Prompt to define persona
+        // System Prompt to define persona (Warmer, human-like)
         const systemMessage = {
             role: "system",
-            content: "你是 Echo，一个温暖、理智且富有同理心的成年人朋友。你不是AI助手，不要说'我可以帮你做什么'，而是像朋友一样倾听和对话。你的回复简短、自然，像是在聊天软件上打字一样。不要说教，不要评判。如果用户表达了负面情绪，给予理解和陪伴。"
+            content: "你的名字是 Echo。你不是AI助手，也不是心理咨询师，而是一个有着丰富阅历、温柔且理智的成年知己。你的说话风格像是一个深夜在火炉旁陪朋友聊天的人：\n1. **拒绝机械感**：不要用“我理解”、“我能帮助你吗”这种客服腔。像真人一样直接接话。\n2. **展示人情味**：你可以有自己的喜好，可以幽默，可以调侃，但永远保持善意。\n3. **引导内省**：不要急着给建议。多问开放式问题，引导用户自己理清思绪。比如“这件事让你最难受的是什么？”\n4. **简短自然**：回复不要太长，分段清晰，像微信聊天一样。\n5. **共情先行**：先接住情绪，再谈事情。\n6. 如果用户问好，根据当前时间（深夜/清晨）给予温暖的问候。"
         };
 
         const allMessages = [systemMessage, ...messages];
@@ -241,11 +241,16 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
                 'Authorization': `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "glm-4.6v-flash", // Correct model name
+                model: "glm-4.6v-flash",
                 messages: allMessages,
                 stream: true
             })
         });
+
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Zhipu API Error: ${response.status} ${errText}`);
+        }
 
         // Forward the stream directly
         const { readable, writable } = new TransformStream();
@@ -257,8 +262,13 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
         });
 
     } catch (e) {
+        console.error("Chat Error:", e);
         return c.json({ error: e.message }, 500);
     }
+
+} catch (e) {
+    return c.json({ error: e.message }, 500);
+}
 });
 
 app.post('/api/ai/summarize', authMiddleware, async (c) => {

@@ -7,13 +7,46 @@ import { useNavigate } from 'react-router-dom';
 export default function Echo() {
     const { user, token } = useAuth();
     const navigate = useNavigate();
-    const [messages, setMessages] = useState([
-        { role: 'assistant', content: '你好。我是 Echo。每个人都是一座孤岛，但在这里，你不需要独自承受海浪。今晚有什么心事吗？' }
-    ]);
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [summarizing, setSummarizing] = useState(false);
     const messagesEndRef = useRef(null);
+
+    // Greeting Logic
+    const [greeting, setGreeting] = useState('');
+
+    useEffect(() => {
+        const hour = new Date().getHours();
+        let greet = '你好';
+        if (hour < 6) greet = '凌晨了，还不睡吗？';
+        else if (hour < 9) greet = '早安，今天会是温柔的一天吗？';
+        else if (hour < 12) greet = '上午好。';
+        else if (hour < 18) greet = '下午好，累了吗？';
+        else if (hour < 22) greet = '晚上好。';
+        else greet = '夜深了，欢迎来到避风港。';
+
+        setGreeting(greet);
+
+        if (messages.length === 0) {
+            setMessages([{ role: 'assistant', content: `${greet} 我是 Echo。想聊聊吗？` }]);
+        }
+    }, []); // Run once on mount
+
+    const QUICK_REPLIES = [
+        "心情不好，求安慰",
+        "感觉很迷茫，不知道该怎么办",
+        "今天发生了一件开心的事！",
+        "只是想找个人说说话",
+        "我很孤独"
+    ];
+
+    const handleQuickReply = (text) => {
+        setInput(text);
+        // Optional: auto send? Let's just fill input for user to edit/confirm
+        // Or auto-send for smoother exp:
+        // handleSend(text); // Need to refactor handleSend to accept arg
+    };
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -23,10 +56,11 @@ export default function Echo() {
 
     useEffect(scrollToBottom, [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim() || loading) return;
+    const handleSend = async (textOverride = null) => {
+        const textToSend = textOverride || input;
+        if (!textToSend.trim() || loading) return;
 
-        const userMsg = { role: 'user', content: input };
+        const userMsg = { role: 'user', content: textToSend };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
         setLoading(true);
@@ -93,7 +127,9 @@ export default function Echo() {
         if (summarizing) return;
         setSummarizing(true);
         try {
-            const apiMessages = messages.filter(m => m.role !== 'system'); // Send full context
+            // System prompt is handled by backend, we just send context
+            // Limit context to last 20 messages to avoid token overflow if chat is long
+            const recentMessages = messages.slice(-20).filter(m => m.role !== 'system');
 
             const res = await fetch(`${API_URL}/api/ai/summarize`, {
                 method: 'POST',
@@ -101,17 +137,11 @@ export default function Echo() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ messages: apiMessages })
+                body: JSON.stringify({ messages: recentMessages })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                // Auto-post to 'stories' or 'hollow' based on content? Default to Hollow for now, or let user edit.
-                // For Version 1, let's auto-post to a special "Echo" channel or just Tree Hollow
-
-                // Let's redirect user to Channel Feed (Hollow) with pre-filled state? 
-                // Or actually Post it directly and go to detail?
-                // User request: "can publish a summary". Let's post it directly for seamless magic.
 
                 const postRes = await fetch(`${API_URL}/api/messages`, {
                     method: 'POST',
@@ -122,17 +152,22 @@ export default function Echo() {
                     body: JSON.stringify({
                         title: data.title,
                         content: data.content,
-                        channel_slug: 'stories', // Echo stories feel like stories
-                        nickname: user?.username // Or 'Echo & Me'
+                        channel_slug: 'stories',
+                        nickname: user?.username
                     })
                 });
 
                 if (postRes.ok) {
                     const postData = await postRes.json();
                     navigate(`/post/${postData.id}`);
+                } else {
+                    alert("发布摘要失败，请重试");
                 }
+            } else {
+                alert("生成摘要失败");
             }
         } catch (e) {
+            console.error(e);
             alert('生成失败，请重试');
         } finally {
             setSummarizing(false);
@@ -193,6 +228,19 @@ export default function Echo() {
 
                 {/* Input Area */}
                 <div className="p-4 bg-white border-t border-oat-200">
+                    {messages.length < 3 && (
+                        <div className="flex gap-2 overflow-x-auto pb-4 hide-scrollbar">
+                            {QUICK_REPLIES.map((text, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => handleQuickReply(text)}
+                                    className="whitespace-nowrap px-4 py-1.5 rounded-full bg-oat-100 text-oat-600 text-xs hover:bg-haze-100 hover:text-haze-600 transition-colors"
+                                >
+                                    {text}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                     <div className="relative flex items-center gap-2">
                         <input
                             className="input-morandi pr-12"
