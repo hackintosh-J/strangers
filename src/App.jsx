@@ -11,6 +11,8 @@ import PostDetail from './pages/PostDetail';
 import Drifting from './pages/Drifting';
 import Echo from './pages/Echo';
 import Compose from './pages/Compose';
+import Friends from './pages/Friends';
+import Chat from './pages/Chat';
 import { useAuth } from './hooks/useAuth';
 
 function App() {
@@ -25,10 +27,13 @@ function App() {
                     <Route path="/drifting" element={<Drifting />} />
                     <Route path="/echo" element={<Echo />} />
                     <Route path="/compose" element={<Compose />} />
+                    <Route path="/friends" element={<Friends />} />
+                    <Route path="/chat/:id" element={<Chat />} />
 
                     <Route path="/login" element={<Login />} />
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/:id" element={<Profile />} />
                     <Route path="/about" element={<About />} />
                 </Routes>
             </HashRouter>

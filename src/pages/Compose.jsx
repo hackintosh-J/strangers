@@ -16,11 +16,27 @@ export default function Compose() {
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
-    const CHANNELS = [
-        { slug: 'help', name: '解忧杂货店', icon: '📪' },
-        { slug: 'hollow', name: '树洞', icon: '🌲' },
-        { slug: 'stories', name: '故事集', icon: '📖' },
-    ];
+    const [channels, setChannels] = useState([]);
+
+    useEffect(() => {
+        // Fetch channels from API to ensure we have the latest list (including new ones)
+        fetch(`${API_URL}/api/channels`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setChannels(data);
+                }
+            })
+            .catch(err => {
+                console.error("Failed to load channels", err);
+                // Fallback if API fails
+                setChannels([
+                    { slug: 'help', name: '解忧杂货店', icon: '📪' },
+                    { slug: 'hollow', name: '树洞', icon: '🌲' },
+                    { slug: 'stories', name: '故事集', icon: '📖' },
+                ]);
+            });
+    }, []);
 
     const handlePost = async () => {
         if (!content.trim()) return;
@@ -80,7 +96,7 @@ export default function Compose() {
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-oat-400 uppercase tracking-widest">发布到</label>
                         <div className="flex gap-4 overflow-x-auto pb-2">
-                            {CHANNELS.map(ch => (
+                            {channels.map(ch => (
                                 <button
                                     key={ch.slug}
                                     onClick={() => setChannel(ch.slug)}

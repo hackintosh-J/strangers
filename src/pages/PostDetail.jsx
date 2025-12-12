@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Markdown from 'react-markdown';
 import { ArrowLeft, Clock, MessageSquare, Heart, Send, Trash2 } from 'lucide-react';
@@ -112,7 +112,7 @@ export default function PostDetail() {
                             <div className="mb-8 text-center">
                                 {post.title && <h1 className="text-3xl md:text-4xl font-serif font-bold text-ink mb-4 leading-tight">{post.title}</h1>}
                                 <div className="flex items-center justify-center gap-4 text-sm text-oat-400 font-sans">
-                                    <span>{post.nickname || '路人'}</span>
+                                    <Link to={`/profile/${post.user_id}`} className="hover:text-haze-600 font-bold transition-colors">{post.nickname || '路人'}</Link>
                                     <span>•</span>
                                     <span className="flex items-center gap-1">
                                         <Clock size={14} />

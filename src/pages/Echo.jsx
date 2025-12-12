@@ -90,17 +90,22 @@ export default function Echo() {
             // Add placeholder for assistant response
             setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
+            let buffer = '';
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
                 const chunk = decoder.decode(value, { stream: true });
-                // Zhipu SSE format usually: data: {...}
-                const lines = chunk.split('\n');
+                buffer += chunk;
+
+                const lines = buffer.split('\n');
+                // Keep the last potentially incomplete line in the buffer
+                buffer = lines.pop() || '';
 
                 for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        const jsonStr = line.slice(6);
+                    const trimmedLine = line.trim();
+                    if (trimmedLine.startsWith('data: ')) {
+                        const jsonStr = trimmedLine.slice(6);
                         if (jsonStr === '[DONE]') continue;
                         try {
                             const data = JSON.parse(jsonStr);
@@ -111,8 +116,7 @@ export default function Echo() {
                                 const lastMsg = newMsgs[newMsgs.length - 1];
                                 lastMsg.content += delta;
 
-                                // Aggressively strip leading whitespace from the AI response being built
-                                // This prevents "jumping" or empty lines at the start
+                                // Aggressively strip leading whitespace
                                 if (lastMsg.role === 'assistant') {
                                     lastMsg.content = lastMsg.content.replace(/^\s+/, '');
                                 }

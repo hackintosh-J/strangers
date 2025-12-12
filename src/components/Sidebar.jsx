@@ -12,8 +12,9 @@ export default function Sidebar() {
         { to: '/drifting', icon: <Ship size={24} />, label: '漂流' },
         { to: '/compose', icon: <PenTool size={24} />, label: '发帖', highlight: true }, // New Center Action
         { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' },
+        { to: '/friends', icon: <User size={24} />, label: '好友' },
         ...(user?.role === 'admin' ? [{ to: '/admin', icon: <Compass size={24} />, label: '管理' }] : []),
-        { to: user ? '/profile' : '/login', icon: user ? <User size={24} /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
+        { to: user ? '/profile' : '/login', icon: user ? <div className="w-5 h-5 rounded-full bg-oat-200 border-2 border-current" /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
     ];
 
     const NavItem = ({ to, icon, label, highlight, exact = false }) => {
@@ -22,8 +23,8 @@ export default function Sidebar() {
         // Highlight style (Center Button)
         if (highlight) {
             return (
-                <Link to={to} className="flex items-center justify-center md:px-6 md:py-3.5">
-                    <div className="w-12 h-12 md:w-full md:h-12 bg-haze-600 rounded-full md:rounded-xl text-white flex items-center justify-center md:justify-start md:px-4 gap-3 shadow-lg hover:bg-haze-700 hover:scale-105 active:scale-95 transition-all">
+                <Link to={to} className="flex items-center justify-center -mt-8 md:mt-0 md:px-6 md:py-3.5">
+                    <div className="w-14 h-14 md:w-full md:h-12 bg-haze-600 rounded-full md:rounded-xl text-white flex items-center justify-center md:justify-start md:px-4 gap-3 shadow-lg hover:bg-haze-700 hover:scale-105 active:scale-95 transition-all border-4 border-white md:border-0">
                         {icon}
                         <span className="hidden md:block font-bold">发帖</span>
                     </div>
@@ -35,17 +36,18 @@ export default function Sidebar() {
             <Link
                 to={to}
                 className={`
-          flex items-center justify-center md:justify-start gap-4 md:px-6 md:py-3.5 rounded-xl transition-all duration-300
+          flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-4 md:px-6 md:py-3.5 rounded-xl transition-all duration-300
           ${isActive
                         ? 'text-haze-600 md:bg-haze-50 font-bold'
                         : 'text-oat-400 hover:text-haze-500 md:hover:bg-oat-50'
                     }
         `}
             >
-                <span className="relative">
+                <div className="relative">
                     {icon}
                     {isActive && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-haze-500 rounded-full md:hidden" />}
-                </span>
+                </div>
+                {/* Hide text on mobile to prevent crowding */}
                 <span className="hidden md:block text-sm font-medium tracking-wide">{label}</span>
             </Link>
         );
