@@ -408,7 +408,7 @@ app.get('/api/messages/:id', async (c) => {
 // --- Public Posts Routes ---
 app.get('/api/messages', async (c) => {
     try {
-        const { cursor, limit = 20 } = c.req.query();
+        const { cursor, limit = 20, sort } = c.req.query();
         let query = `SELECT m.*, u.username, 
        (SELECT COUNT(*) FROM comments WHERE message_id = m.id) as comment_count,
        (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) as like_count
@@ -416,19 +416,31 @@ app.get('/api/messages', async (c) => {
        LEFT JOIN users u ON m.user_id = u.id`;
 
         let params = [];
-        if (cursor) {
-            query += ` WHERE m.id < ?`;
-            params.push(cursor);
-        }
 
-        query += ` ORDER BY m.created_at DESC, m.id DESC LIMIT ?`;
-        params.push(parseInt(limit));
+        if (sort === 'hot') {
+            // Hot: views + comments*2 + likes*3
+            // Note: We cannot easily use aliases in ORDER BY with complex expressions in some SQL engines, 
+            // but SQLite usually supports it or we repeat the subqueries.
+            // Performance note: fast sorting on computed columns needs generated columns/indexes, but for small app it's fine.
+            query += ` ORDER BY (m.view_count + 
+                (SELECT COUNT(*) FROM comments WHERE message_id = m.id) * 2 + 
+                (SELECT COUNT(*) FROM likes WHERE target_type = 'message' AND target_id = m.id) * 3
+            ) DESC, m.created_at DESC LIMIT ?`;
+            params.push(parseInt(limit));
+        } else {
+            if (cursor) {
+                query += ` WHERE m.id < ?`;
+                params.push(cursor);
+            }
+            query += ` ORDER BY m.created_at DESC, m.id DESC LIMIT ?`;
+            params.push(parseInt(limit));
+        }
 
         const { results } = await c.env.DB.prepare(query).bind(...params).all();
 
         return c.json({
             data: results,
-            next_cursor: results.length > 0 ? results[results.length - 1].id : null
+            next_cursor: (sort !== 'hot' && results.length > 0) ? results[results.length - 1].id : null
         });
     } catch (e) {
         return c.json({ error: e.message, stack: e.stack }, 500);

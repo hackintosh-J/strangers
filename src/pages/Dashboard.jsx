@@ -1,16 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { ArrowRight, Flame } from 'lucide-react';
+import { ArrowRight, Flame, MessageSquare, Heart, Eye } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { zhCN } from 'date-fns/locale';
 
 export default function Dashboard() {
     const [channels, setChannels] = useState([]);
+    const [hotPosts, setHotPosts] = useState([]);
     const API_URL = import.meta.env.VITE_API_URL || '';
 
     useEffect(() => {
+        // Fetch Channels
         fetch(`${API_URL}/api/channels`)
             .then(res => res.json())
             .then(data => setChannels(data))
+            .catch(console.error);
+
+        // Fetch Hot Posts
+        fetch(`${API_URL}/api/messages?sort=hot&limit=5`)
+            .then(res => res.json())
+            .then(res => {
+                if (res.data) setHotPosts(res.data);
+            })
             .catch(console.error);
     }, []);
 
@@ -68,14 +80,53 @@ export default function Dashboard() {
                     </div>
                 </section>
 
-                {/* Latest / Hot (Placeholder for V4 phase 2) */}
+                {/* Latest / Hot */}
                 <section>
                     <div className="flex items-center gap-2 mb-6 text-ink font-serif font-bold text-xl">
                         <Flame size={20} className="text-rose-400 fill-rose-400" />
                         <h2>热门动态</h2>
                     </div>
-                    <div className="bg-white rounded-2xl border border-oat-200 p-8 text-center text-oat-400 italic">
-                        热门榜单正在生成中... 先去板块里看看吧。
+
+                    <div className="space-y-4">
+                        {hotPosts.length > 0 ? hotPosts.map(post => (
+                            <Link key={post.id} to={`/post/${post.id}`} className="block bg-white rounded-2xl p-5 border border-oat-200 shadow-sm hover:shadow-md transition-all group">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-bold text-lg text-ink line-clamp-1 group-hover:text-haze-600 transition-colors">
+                                        {post.title || post.content.slice(0, 20)}
+                                    </h3>
+                                    <span className="text-xs text-oat-400 whitespace-nowrap ml-4">
+                                        {formatDistanceToNow(new Date(post.created_at * 1000), { addSuffix: true, locale: zhCN })}
+                                    </span>
+                                </div>
+                                <p className="text-oat-500 text-sm line-clamp-2 mb-4 leading-relaxed">
+                                    {post.content}
+                                </p>
+                                <div className="flex items-center gap-4 text-xs font-medium text-oat-400">
+                                    <div className="flex items-center gap-1">
+                                        <Eye size={14} />
+                                        <span>{post.view_count || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <Heart size={14} />
+                                        <span>{post.like_count || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <MessageSquare size={14} />
+                                        <span>{post.comment_count || 0}</span>
+                                    </div>
+                                    <div className="ml-auto flex items-center gap-2">
+                                        <div className="w-5 h-5 rounded-full bg-oat-100 flex items-center justify-center text-[10px] text-oat-500">
+                                            {post.username?.[0]?.toUpperCase()}
+                                        </div>
+                                        <span>{post.username}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        )) : (
+                            <div className="bg-white rounded-2xl border border-oat-200 p-8 text-center text-oat-400 italic">
+                                正在加载热门内容...
+                            </div>
+                        )}
                     </div>
                 </section>
 
