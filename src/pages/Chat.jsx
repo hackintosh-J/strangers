@@ -23,125 +23,210 @@ export default function Chat() {
         // Fetch Partner Info
         fetch(`${API_URL}/api/users/${id}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
-            .then(data => setPartner(data.user || { username: 'Unknown' }));
-
-        // Fetch Messages
-        fetch(`${API_URL}/api/direct_messages/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) setMessages(data);
-                setLoading(false);
-                setTimeout(scrollToBottom, 100);
-            });
-
-        // Polling for new messages (Simple implementation)
-        const interval = setInterval(() => {
-            fetch(`${API_URL}/api/direct_messages/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data)) setMessages(data);
-                });
-        }, 10000);
-
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 10000); // Poll every 10s
         return () => clearInterval(interval);
+    }, [userId, token]);
 
-    }, [id, token]);
-
-    const scrollToBottom = () => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const fetchMessages = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/direct_messages/${userId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setMessages(data.messages);
+                setTargetUser(data.other_user);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSend = async () => {
-        if (!input.trim()) return;
-        const tempMsg = {
-            id: 'temp-' + Date.now(),
-            sender_id: user.id,
-            content: input,
-            created_at: Date.now() / 1000 // optimistic
-        };
-        setMessages([...messages, tempMsg]);
-        setInput('');
-        scrollToBottom();
-
+    const handleSend = async (content = input, type = 'text') => {
+        if (!content.trim() && type === 'text') return;
+        setSending(true);
         try {
-            await fetch(`${API_URL}/api/direct_messages`, {
+            const res = await fetch(`${API_URL}/api/direct_messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ receiver_id: id, content: tempMsg.content })
+                body: JSON.stringify({ receiver_id: userId, content, type }) // Note: type is implicit in content or need schema update? Schema v4 checks? 
+                // Ah, current schema doesn't have 'type'. We usually store JSON or prefix.
+                // Let's use prefix for simplicity: [image]url, [voice]url, [sticker]url
+                // Backend V4 schema: content TEXT.
             });
-            // Refresh logic will catch up
+
+            if (res.ok) {
+                setInput('');
+                fetchMessages();
+                setShowStickers(false);
+            }
         } catch (e) {
-            alert('发送失败');
+            console.error(e);
+        } finally {
+            setSending(false);
         }
     };
 
-    if (!user) { navigate('/login'); return null; }
+    // Prefixes for mixed content types in V4 schema
+    const formatPayload = (url, type) => `[${type}]${url}`;
 
-    return (
-        <div className="flex min-h-screen bg-paper">
-            <Sidebar />
-            <main className="flex-1 w-full max-w-3xl mx-auto flex flex-col h-screen md:border-x border-oat-200 bg-white shadow-soft relative">
+    const onStickerSelect = (sticker) => handleSend(formatPayload(sticker.url, 'sticker'), 'sticker');
 
-                {/* Header */}
-                <div className="p-4 border-b border-oat-200 flex items-center gap-4 bg-white/95 backdrop-blur z-10 sticky top-0">
-                    <button onClick={() => navigate('/friends')} className="md:hidden text-oat-500">
-                        <ArrowLeft />
-                    </button>
-                    <div>
-                        <h1 className="font-bold text-ink text-lg">{partner ? partner.username : 'Loading...'}</h1>
-                        <p className="text-xs text-oat-400 font-serif italic">私信聊天中</p>
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Quick upload logic
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const res = await fetch(`${API_URL}/api/upload`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+            if (res.ok) {
+                const { url } = await res.json();
+                handleSend(formatPayload(url, 'image'));
+            }
+        } catch (e) { alert('Upload failed'); }
+    };
+
+    const toggleRecord = async () => {
+        if (recording) {
+            mediaRecorder.stop();
+            setRecording(false);
+        } else {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(stream);
+                const chunks = [];
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = async () => {
+                    const blob = new Blob(chunks, { type: 'audio/webm' });
+                    const file = new File([blob], 'voice.webm', { type: 'audio/webm' });
+                    // Upload
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    const res = await fetch(`${API_URL}/api/upload`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` },
+                        body: formData
+                    });
+                    if (res.ok) {
+                        const { url } = await res.json();
+                        handleSend(formatPayload(url, 'voice'));
+                    }
+                };
+                recorder.start();
+                setMediaRecorder(recorder);
+                setRecording(true);
+            } catch (e) { alert('Mic access denied'); }
+        }
+    };
+
+    const renderMessage = (msg) => {
+        const isMe = String(msg.sender_id) === String(user.id);
+        let content = msg.content;
+        let type = 'text';
+
+        // Parse legacy prefix
+        if (content.startsWith('[image]')) { type = 'image'; content = content.replace('[image]', ''); }
+        else if (content.startsWith('[sticker]')) { type = 'sticker'; content = content.replace('[sticker]', ''); }
+        else if (content.startsWith('[voice]')) { type = 'voice'; content = content.replace('[voice]', ''); }
+
+        return (
+            <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
+                <div className={`max-w-[75%] rounded-2xl p-4 shadow-sm ${isMe ? 'bg-haze-600 text-white rounded-br-none' : 'bg-white text-ink border border-oat-200 rounded-bl-none'}`}>
+                    {type === 'text' && <p>{content}</p>}
+                    {type === 'image' && <img src={content} alt="img" className="rounded-lg max-h-60 cursor-pointer" onClick={() => window.open(content)} />}
+                    {type === 'sticker' && <img src={content} alt="sticker" className="w-32 h-32 object-contain" />}
+                    {type === 'voice' && (
+                        <div className="flex items-center gap-2">
+                            <Mic size={16} />
+                            <audio controls src={content} className="h-8 w-48" />
+                        </div>
+                    )}
+                    <div className={`text-[10px] mt-1 text-right ${isMe ? 'text-haze-200' : 'text-oat-400'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString()}
                     </div>
                 </div>
+            </div>
+        );
+    };
 
-                {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 md:pb-4 scrollbar-hide">
-                    {loading ? (
-                        <div className="text-center py-10"><Loader2 className="animate-spin text-oat-300 mx-auto" /></div>
-                    ) : (
-                        messages.map((msg, i) => {
-                            const isMe = String(msg.sender_id) === String(user.id);
-                            return (
-                                <div key={msg.id || i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`
-                                        max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm
-                                        ${isMe
-                                            ? 'bg-ink text-white rounded-br-none'
-                                            : 'bg-oat-100 text-ink rounded-bl-none'
-                                        }
-                                    `}>
-                                        {msg.content}
-                                    </div>
-                                </div>
-                            );
-                        })
-                    )}
-                    <div ref={bottomRef} />
+    if (loading) return <div className="text-center p-10">Loading...</div>;
+
+    return (
+        <div className="flex flex-col h-screen bg-oat-50">
+            {/* Header */}
+            <div className="bg-white border-b border-oat-200 px-4 py-3 flex items-center gap-3 shadow-sm z-10">
+                <Link to="/friends" className="p-2 hover:bg-oat-100 rounded-full text-oat-500"><ArrowLeft size={20} /></Link>
+                <div className="w-10 h-10 rounded-full bg-haze-100 flex items-center justify-center text-haze-600 font-bold border border-oat-200">
+                    {targetUser?.username?.[0].toUpperCase()}
                 </div>
+                <div className="flex-1">
+                    <h2 className="font-bold text-ink text-lg">{targetUser?.username || 'Chat'}</h2>
+                    {targetUser?.last_active_at && (Date.now() / 1000 - targetUser.last_active_at < 300) &&
+                        <span className="text-xs text-green-500 font-medium flex items-center gap-1">● 在线</span>
+                    }
+                </div>
+                <button onClick={fetchMessages} className="p-2 text-oat-400 hover:text-haze-500 transition-colors"><RefreshCw size={20} /></button>
+            </div>
 
-                {/* Input */}
-                <div className="p-4 border-t border-oat-200 bg-white sticky bottom-0 md:static pb-20 md:pb-4">
-                    <div className="relative">
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2">
+                {messages.map(renderMessage)}
+                <div ref={scrollRef} />
+            </div>
+
+            {/* Input */}
+            <div className="bg-white border-t border-oat-200 p-4 safe-area-pb relative">
+                {showStickers && <StickerPicker onSelect={onStickerSelect} onClose={() => setShowStickers(false)} />}
+
+                <div className="max-w-4xl mx-auto flex items-end gap-2 bg-oat-50 p-2 rounded-2xl border border-oat-200 focus-within:border-haze-300 focus-within:ring-2 focus-within:ring-haze-100 transition-all">
+                    {/* Media Actions */}
+                    <button onClick={() => setShowStickers(!showStickers)} className="p-2 text-oat-400 hover:text-haze-500 hover:bg-white rounded-xl transition-all">
+                        <Smile size={24} />
+                    </button>
+                    <button onClick={() => fileInputRef.current.click()} className="p-2 text-oat-400 hover:text-haze-500 hover:bg-white rounded-xl transition-all">
+                        <ImageIcon size={24} />
+                    </button>
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+
+                    <div className="flex-1 min-h-[44px] flex items-center">
                         <input
+                            type="text"
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && handleSend()}
-                            placeholder="发送私信..."
-                            className="w-full pl-6 pr-14 py-4 rounded-full bg-oat-50 focus:bg-white border border-transparent focus:border-oat-300 outline-none transition-all shadow-inner"
+                            placeholder="说点什么..."
+                            className="w-full bg-transparent border-none focus:ring-0 text-ink placeholder:text-oat-400 px-2"
                         />
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim()}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-haze-600 rounded-full flex items-center justify-center text-white hover:bg-haze-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
-                        >
-                            <Send size={18} />
-                        </button>
                     </div>
-                </div>
 
-            </main>
+                    <button
+                        onClick={toggleRecord}
+                        className={`p-2 rounded-xl transition-all ${recording ? 'bg-red-500 text-white animate-pulse' : 'text-oat-400 hover:text-haze-500 hover:bg-white'}`}
+                    >
+                        <Mic size={24} />
+                    </button>
+
+                    <button
+                        onClick={() => handleSend()}
+                        disabled={sending || (!input.trim() && !recording)}
+                        className="p-2 bg-haze-600 text-white rounded-xl hover:bg-haze-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all"
+                    >
+                        <Send size={20} />
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
