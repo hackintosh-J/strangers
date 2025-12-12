@@ -58,6 +58,99 @@ const authMiddleware = async (c, next) => {
     }
 };
 
+// --- Multimedia Routes (R2) ---
+// 1. Get Presigned URL (or Upload Proxy)
+// For simplicity and small files, we proxy upload through Worker for now.
+app.put('/api/upload', authMiddleware, async (c) => {
+    try {
+        const body = await c.req.parseBody();
+        const file = body['file']; // Multipart form data
+
+        if (!file || !(file instanceof File)) {
+            return c.json({ error: 'No file uploaded' }, 400);
+        }
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/ogg', 'audio/webm', 'audio/wav'];
+        if (!allowedTypes.includes(file.type)) {
+            return c.json({ error: 'Invalid file type' }, 400);
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            return c.json({ error: 'File too large (Max 5MB)' }, 400);
+        }
+
+        const ext = file.type.split('/')[1];
+        const filename = `${crypto.randomUUID()}.${ext}`;
+        const user = c.get('jwtPayload');
+
+        // Structure: /<type>/<filename>
+        // We determine type by mime.
+        let folder = 'misc';
+        if (file.type.startsWith('image/')) folder = 'chat/images';
+        if (file.type.startsWith('audio/')) folder = 'chat/voice';
+
+        const key = `${folder}/${filename}`;
+
+        await c.env.MEDIA_BUCKET.put(key, file.stream(), {
+            httpMetadata: { contentType: file.type }
+        });
+
+        // Helper to get public URL. Assumes custom domain mapping or R2 dev subdomain.
+        // If R2 public bucket is enabled at media.strangers.hackins.club
+        const publicUrl = `https://media.strangers.hackins.club/${key}`;
+        // Fallback if domain not set up: We can serve via worker GET route too, but R2 public access is better.
+        // For now, let's assume specific domain or return key.
+
+        return c.json({ url: publicUrl, key: key });
+    } catch (e) {
+        return c.json({ error: 'Upload failed: ' + e.message }, 500);
+    }
+});
+
+// --- Sticker Routes ---
+app.post('/api/stickers', authMiddleware, async (c) => {
+    const { url } = await c.req.json();
+    const user = c.get('jwtPayload');
+    if (!url) return c.json({ error: 'Missing URL' }, 400);
+
+    try {
+        const { success } = await c.env.DB.prepare(
+            "INSERT INTO stickers (user_id, url) VALUES (?, ?)"
+        ).bind(user.id, url).run();
+
+        // Auto collect for self
+        const sticker = await c.env.DB.prepare("SELECT last_insert_rowid() as id").first();
+        await c.env.DB.prepare("INSERT INTO user_stickers (user_id, sticker_id) VALUES (?, ?)").bind(user.id, sticker.id).run();
+
+        return c.json({ success: true, id: sticker.id });
+    } catch (e) { return c.json({ error: e.message }, 500); }
+});
+
+app.get('/api/stickers/mine', authMiddleware, async (c) => {
+    const user = c.get('jwtPayload');
+    try {
+        const { results } = await c.env.DB.prepare(`
+            SELECT s.* FROM stickers s
+            JOIN user_stickers us ON s.id = us.sticker_id
+            WHERE us.user_id = ?
+            ORDER BY us.created_at DESC
+        `).bind(user.id).all();
+        return c.json(results);
+    } catch (e) { return c.json({ error: e.message }, 500); }
+});
+
+app.post('/api/stickers/:id/collect', authMiddleware, async (c) => {
+    const stickerId = c.req.param('id');
+    const user = c.get('jwtPayload');
+    try {
+        await c.env.DB.prepare(
+            "INSERT OR IGNORE INTO user_stickers (user_id, sticker_id) VALUES (?, ?)"
+        ).bind(user.id, stickerId).run();
+        return c.json({ success: true });
+    } catch (e) { return c.json({ error: e.message }, 500); }
+});
+
+
 app.get('/', (c) => c.text('Strangers API V2 Running'));
 
 // --- DEBUG ENDPOINT (Remove in Production) ---
