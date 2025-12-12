@@ -423,7 +423,7 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
                 'Authorization': `Bearer ${API_KEY}`
             },
             body: JSON.stringify({
-                model: "glm-4v", // Upgrading to 4v for stable image support
+                model: "glm-4.6v-flash",
                 messages: allMessages,
                 stream: true
             })

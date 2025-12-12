@@ -1,4 +1,4 @@
-export const compressImage = async (file, maxWidth = 1920, quality = 0.8) => {
+export const compressImage = async (file, targetSizeKB = 200) => {
     if (!file.type.startsWith('image/')) return file;
 
     return new Promise((resolve, reject) => {
@@ -12,9 +12,16 @@ export const compressImage = async (file, maxWidth = 1920, quality = 0.8) => {
                 let width = img.width;
                 let height = img.height;
 
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
+                // Initial Resize: Limit max dimension to 1280 (was 1920) for better start
+                const MAX_DIM = 1280;
+                if (width > MAX_DIM || height > MAX_DIM) {
+                    if (width > height) {
+                        height = Math.round((height * MAX_DIM) / width);
+                        width = MAX_DIM;
+                    } else {
+                        width = Math.round((width * MAX_DIM) / height);
+                        height = MAX_DIM;
+                    }
                 }
 
                 canvas.width = width;
@@ -22,24 +29,32 @@ export const compressImage = async (file, maxWidth = 1920, quality = 0.8) => {
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
 
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        reject(new Error('Canvas is empty'));
-                        return;
-                    }
-                    // Create new File object
-                    const compressedFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
+                // Aggressive Iteration
+                let quality = 0.7;
+                let minQuality = 0.1;
 
-                    // If compressed is larger (rare but possible), return original
-                    if (compressedFile.size > file.size) {
-                        resolve(file);
-                    } else {
-                        resolve(compressedFile);
-                    }
-                }, 'image/jpeg', quality);
+                const tryCompress = (q) => {
+                    canvas.toBlob((blob) => {
+                        if (!blob) {
+                            reject(new Error('Canvas empty'));
+                            return;
+                        }
+
+                        // Check size
+                        if (blob.size / 1024 <= targetSizeKB || q <= minQuality) {
+                            const compressedFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+                            resolve(compressedFile);
+                        } else {
+                            // Retry with lower quality
+                            tryCompress(Math.max(q - 0.1, minQuality));
+                        }
+                    }, 'image/jpeg', q);
+                };
+
+                tryCompress(quality);
             };
             img.onerror = (err) => reject(err);
         };
