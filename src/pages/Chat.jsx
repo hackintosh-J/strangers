@@ -26,17 +26,17 @@ export default function Chat() {
         fetchMessages();
         const interval = setInterval(fetchMessages, 10000); // Poll every 10s
         return () => clearInterval(interval);
-    }, [userId, token]);
+    }, [id, token]);
 
     const fetchMessages = async () => {
         try {
-            const res = await fetch(`${API_URL}/api/direct_messages/${userId}`, {
+            const res = await fetch(`${API_URL}/api/direct_messages/${id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data.messages);
-                setTargetUser(data.other_user);
+                setPartner(data.other_user);
             }
         } catch (e) {
             console.error(e);
@@ -55,7 +55,8 @@ export default function Chat() {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ receiver_id: userId, content, type }) // Note: type is implicit in content or need schema update? Schema v4 checks? 
+                body: JSON.stringify({ receiver_id: id, content, type }) // Fixed userId -> id
+                // Note: type is implicit in content or need schema update? Schema v4 checks? 
                 // Ah, current schema doesn't have 'type'. We usually store JSON or prefix.
                 // Let's use prefix for simplicity: [image]url, [voice]url, [sticker]url
                 // Backend V4 schema: content TEXT.

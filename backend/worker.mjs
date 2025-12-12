@@ -95,15 +95,13 @@ app.put('/api/upload', authMiddleware, async (c) => {
             httpMetadata: { contentType: file.type }
         });
 
-        // Helper to get public URL. Assumes custom domain mapping or R2 dev subdomain.
-        // If R2 public bucket is enabled at media.strangers.hackins.club
-        const publicUrl = `https://media.strangers.hackins.club/${key}`;
-        // Fallback if domain not set up: We can serve via worker GET route too, but R2 public access is better.
-        // For now, let's assume specific domain or return key.
+        // Use Worker Proxy instead to avoid DNS setup issues
+        const url = new URL(c.req.url);
+        const publicUrl = `${url.origin}/api/media/${key}`;
 
-        return c.json({ url: publicUrl, key: key });
+        return c.json({ url: publicUrl });
     } catch (e) {
-        return c.json({ error: 'Upload failed: ' + e.message }, 500);
+        return c.json({ error: e.message }, 500);
     }
 });
 
