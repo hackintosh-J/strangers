@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../hooks/useAuth';
 import { Send, ArrowLeft, Loader2, RefreshCw, Mic, Smile, ImageIcon } from 'lucide-react';
+import StickerPicker from '../components/StickerPicker';
 
 export default function Chat() {
     const { id } = useParams();
@@ -13,7 +14,12 @@ export default function Chat() {
     const [input, setInput] = useState('');
     const [targetUser, setTargetUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const bottomRef = useRef(null);
+    const [sending, setSending] = useState(false);
+    const [showStickers, setShowStickers] = useState(false);
+    const [recording, setRecording] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
+    const scrollRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -23,10 +29,16 @@ export default function Chat() {
         // Fetch Partner Info
         fetch(`${API_URL}/api/users/${id}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
+            .then(data => setTargetUser(data))
+            .catch(console.error);
         fetchMessages();
         const interval = setInterval(fetchMessages, 10000); // Poll every 10s
         return () => clearInterval(interval);
     }, [id, token]);
+
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
 
     const fetchMessages = async () => {
         try {
@@ -35,8 +47,8 @@ export default function Chat() {
             });
             if (res.ok) {
                 const data = await res.json();
-                setMessages(data.messages);
-                setTargetUser(data.other_user);
+                // Backend returns array directly
+                setMessages(Array.isArray(data) ? data : []);
             }
         } catch (e) {
             console.error(e);
