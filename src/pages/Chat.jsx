@@ -98,7 +98,7 @@ export default function Chat() {
 
         try {
             setSending(true);
-            const compressedFile = await compressImage(file);
+            const compressedFile = await compressImage(file, 'storage');
 
             const formData = new FormData();
             formData.append('file', compressedFile);

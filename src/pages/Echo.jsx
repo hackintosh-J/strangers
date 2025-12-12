@@ -13,6 +13,7 @@ export default function Echo() {
     const [loading, setLoading] = useState(false);
     const [summarizing, setSummarizing] = useState(false);
     const messagesEndRef = useRef(null);
+    const fileInputRef = useRef(null);
 
     // Greeting Logic
     const [greeting, setGreeting] = useState('');
@@ -85,17 +86,20 @@ export default function Echo() {
             if (!response.ok) throw new Error('Failed to connect to Echo');
 
             // Handle Stream
+            // Handle Stream
             const reader = response.body.getReader();
-            const decoder = new TextDecoder();
+            const decoder = new TextDecoder("utf-8");
 
             // Add placeholder for assistant response
             setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
             let buffer = '';
+
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
+                // Decode with stream: true to handle multi-byte characters split across chunks
                 const chunk = decoder.decode(value, { stream: true });
                 buffer += chunk;
 
@@ -105,25 +109,27 @@ export default function Echo() {
 
                 for (const line of lines) {
                     const trimmedLine = line.trim();
+                    if (!trimmedLine) continue;
+
                     if (trimmedLine.startsWith('data: ')) {
                         const jsonStr = trimmedLine.slice(6);
                         if (jsonStr === '[DONE]') continue;
                         try {
                             const data = JSON.parse(jsonStr);
                             const delta = data.choices[0].delta.content || '';
-
-                            setMessages(prev => {
-                                const newMsgs = [...prev];
-                                const lastMsg = newMsgs[newMsgs.length - 1];
-                                lastMsg.content += delta;
-
-                                // Aggressively strip leading whitespace
-                                if (lastMsg.role === 'assistant') {
-                                    lastMsg.content = lastMsg.content.replace(/^\s+/, '');
-                                }
-
-                                return newMsgs;
-                            });
+                            if (delta) {
+                                setMessages(prev => {
+                                    // Optimization: Modify last message directly to avoid massive re-renders? 
+                                    // React state immutability is safer.
+                                    const newMsgs = [...prev];
+                                    const lastMsg = newMsgs[newMsgs.length - 1];
+                                    if (lastMsg.role === 'assistant') {
+                                        lastMsg.content += delta;
+                                        // Optional: strip leading whitespace only once at start, not every chunk
+                                    }
+                                    return newMsgs;
+                                });
+                            }
                         } catch (e) {
                             console.error('Error parsing SSE:', e);
                         }
@@ -274,7 +280,7 @@ export default function Echo() {
 
                                 try {
                                     setLoading(true);
-                                    const compressedFile = await compressImage(file);
+                                    const compressedFile = await compressImage(file, 'ai');
 
                                     const formData = new FormData();
                                     formData.append('file', compressedFile);
@@ -285,7 +291,9 @@ export default function Echo() {
                                     });
                                     if (res.ok) {
                                         const { url } = await res.json();
-                                        handleSend(`[image]${url}`);
+                                        // Don't send immediately. Append to input for context asking.
+                                        setInput(prev => prev + (prev ? '\n' : '') + `[image]${url} `);
+                                        // Focus input if you want
                                     } else {
                                         const err = await res.json();
                                         alert(err.error || '上传失败');

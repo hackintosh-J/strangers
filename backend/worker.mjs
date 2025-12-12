@@ -441,6 +441,7 @@ app.post('/api/ai/chat', authMiddleware, async (c) => {
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
             'Connection': 'keep-alive',
+            'X-Content-Type-Options': 'nosniff' // Prevent mime sniffing
         });
 
     } catch (e) {
@@ -860,7 +861,10 @@ app.post('/api/direct_messages/:id/revoke', authMiddleware, async (c) => {
         const isVoice = msg.content.startsWith('[voice]');
 
         if (!isImage && !isSticker) {
-            // Text or Voice -> 2 minute limit
+            // Text -> 2 minute limit (120s)
+            // Voice -> 2 hour limit (7200s)
+            const limit = isVoice ? 7200 : 120;
+
             // Note: msg.created_at in SQLite might be integer (seconds) or string.
             // Based on previous code: `Math.floor(Date.now() / 1000)` was used for last_active_at.
             // Let's check `schema.sql` if possible, but safely assuming we can handle integer or string.
@@ -870,12 +874,10 @@ app.post('/api/direct_messages/:id/revoke', authMiddleware, async (c) => {
             if (typeof createdTime === 'string') {
                 createdTime = Math.floor(new Date(createdTime).getTime() / 1000);
             }
-            // If createdTime is NaN (e.g. invalid string), we might fail. 
-            // But let's assume valid DB data.
 
             const now = Math.floor(Date.now() / 1000);
-            if (now - createdTime > 120) {
-                return c.json({ error: "超过2分钟无法撤回" }, 400);
+            if (now - createdTime > limit) {
+                return c.json({ error: `超过${isVoice ? '2小时' : '2分钟'}无法撤回` }, 400);
             }
         }
 
