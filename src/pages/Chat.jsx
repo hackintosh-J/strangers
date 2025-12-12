@@ -11,7 +11,7 @@ export default function Chat() {
 
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
-    const [partner, setPartner] = useState(null);
+    const [targetUser, setTargetUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const bottomRef = useRef(null);
 
@@ -36,7 +36,7 @@ export default function Chat() {
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data.messages);
-                setPartner(data.other_user);
+                setTargetUser(data.other_user);
             }
         } catch (e) {
             console.error(e);

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
-import { Send, Zap, BookOpen, Loader2 } from 'lucide-react';
+import { Send, Zap, BookOpen, Loader2, ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Echo() {
@@ -267,6 +267,10 @@ export default function Echo() {
                             onChange={async (e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
+                                if (file.size > 5 * 1024 * 1024) {
+                                    alert('文件过大，请选择5MB以下的图片');
+                                    return;
+                                }
                                 try {
                                     setLoading(true);
                                     const formData = new FormData();
@@ -279,13 +283,19 @@ export default function Echo() {
                                     if (res.ok) {
                                         const { url } = await res.json();
                                         handleSend(`[image]${url}`);
+                                    } else {
+                                        const err = await res.json();
+                                        alert(err.error || '上传失败');
                                     }
-                                } catch (err) { console.error(err); }
+                                } catch (err) {
+                                    console.error(err);
+                                    alert('上传失败：' + err.message);
+                                }
                                 finally { setLoading(false); }
                             }}
                         />
                         <label htmlFor="echo-img-upload" className="p-2 text-oat-400 hover:text-haze-500 cursor-pointer transition-colors">
-                            <BookOpen size={20} />
+                            <ImageIcon size={20} />
                         </label>
 
                         <input
