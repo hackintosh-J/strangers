@@ -118,9 +118,9 @@ app.post('/api/upload', authMiddleware, handleUpload);
 app.put('/api/upload', authMiddleware, handleUpload);
 
 // 2. Serve Media
-app.get('/api/media/:folder/:filename', async (c) => {
-    const { folder, filename } = c.req.param();
-    const key = `${folder}/${filename}`;
+app.get('/api/media/*', async (c) => {
+    // Extract key from path (e.g. /api/media/chat/images/foo.png -> chat/images/foo.png)
+    const key = c.req.path.replace('/api/media/', '');
 
     const object = await c.env.MEDIA_BUCKET.get(key);
     if (!object) return c.text('404 Not Found', 404);
@@ -196,6 +196,8 @@ app.delete('/api/stickers/:id', authMiddleware, async (c) => {
         return c.json({ success: true });
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
+
+
 
 
 app.get('/', (c) => c.text('Strangers API V2 Running'));
