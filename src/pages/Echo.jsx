@@ -132,8 +132,7 @@ export default function Echo() {
                                     const newMsgs = [...prev];
                                     const lastMsg = newMsgs[newMsgs.length - 1];
                                     if (lastMsg.role === 'assistant') {
-                                        lastMsg.content += delta;
-                                        // Optional: strip leading whitespace only once at start, not every chunk
+                                        lastMsg.content = (lastMsg.content + delta).trimStart();
                                     }
                                     return newMsgs;
                                 });
@@ -244,7 +243,8 @@ export default function Echo() {
                             `}>
                                 {(() => {
                                     // Robust rendering for mixed text/image
-                                    const parts = msg.content.split(/(\[image\]https?:\/\/[^\s]+)/g);
+                                    // Trim start to avoid empty first lines
+                                    const parts = msg.content.trimStart().split(/(\[image\]https?:\/\/[^\s]+)/g);
                                     return parts.map((part, pIdx) => {
                                         if (part.startsWith('[image]')) {
                                             const src = part.replace('[image]', '');
