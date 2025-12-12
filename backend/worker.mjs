@@ -693,35 +693,35 @@ app.get('/api/users/:id/profile', async (c) => {
         } catch (e) { }
     }
 
-    try {
-        try {
-            const userQuery = c.env.DB.prepare(
-                "SELECT id, username, created_at, role, last_active_at FROM users WHERE id = ?"
-            ).bind(targetId).first();
 
-            const statsQuery = c.env.DB.prepare(`
+    try {
+        const userQuery = c.env.DB.prepare(
+            "SELECT id, username, created_at, role, last_active_at FROM users WHERE id = ?"
+        ).bind(targetId).first();
+
+        const statsQuery = c.env.DB.prepare(`
             SELECT 
                 (SELECT COUNT(*) FROM follows WHERE following_id = ?) as followers_count,
                 (SELECT COUNT(*) FROM follows WHERE follower_id = ?) as following_count,
                 (SELECT COUNT(*) FROM messages WHERE user_id = ?) as post_count
         `).bind(targetId, targetId, targetId).first();
 
-            const followingQuery = currentUserId ? c.env.DB.prepare(
-                "SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?"
-            ).bind(currentUserId, targetId).first() : Promise.resolve(null);
+        const followingQuery = currentUserId ? c.env.DB.prepare(
+            "SELECT 1 FROM follows WHERE follower_id = ? AND following_id = ?"
+        ).bind(currentUserId, targetId).first() : Promise.resolve(null);
 
-            const [user, stats, isFollowingResult] = await Promise.all([userQuery, statsQuery, followingQuery]);
+        const [user, stats, isFollowingResult] = await Promise.all([userQuery, statsQuery, followingQuery]);
 
-            if (!user) return c.json({ error: 'User not found' }, 404);
+        if (!user) return c.json({ error: 'User not found' }, 404);
 
-            return c.json({
-                user: { ...user, ...stats },
-                is_following: !!isFollowingResult
-            });
-        } catch (e) {
-            return c.json({ error: e.message }, 500);
-        }
-    });
+        return c.json({
+            user: { ...user, ...stats },
+            is_following: !!isFollowingResult
+        });
+    } catch (e) {
+        return c.json({ error: e.message }, 500);
+    }
+});
 
 export default app;
 
