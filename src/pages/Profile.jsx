@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
-import { User, Calendar, MessageSquare, Users, Heart } from 'lucide-react';
+import { User, Calendar, MessageSquare, Users, Heart, Compass } from 'lucide-react';
 
 export default function Profile() {
     const { user: currentUser, token, logout } = useAuth();
@@ -129,6 +129,16 @@ export default function Profile() {
                                     </button>
                                 ) : (
                                     <>
+                                        {/* Admin Entry */}
+                                        {currentUser?.role === 'admin' && (
+                                            <button
+                                                onClick={() => navigate('/admin')}
+                                                className="px-4 py-2 rounded-full border border-oat-300 text-haze-600 bg-oat-50 hover:bg-oat-100 text-sm font-bold transition-all flex items-center gap-1"
+                                            >
+                                                <Compass size={16} />
+                                                <span>管理面板</span>
+                                            </button>
+                                        )}
                                         {/* Chat Button if Friends? Or just always show? Logic check: only friends can chat. */}
                                         <button
                                             onClick={handleFollow}

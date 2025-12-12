@@ -9,11 +9,9 @@ export default function Sidebar() {
 
     const NAV_ITEMS = [
         { to: '/', icon: <Home size={24} />, label: '首页' },
-        { to: '/drifting', icon: <Ship size={24} />, label: '漂流' },
-        { to: '/compose', icon: <PenTool size={24} />, label: '发帖', highlight: true }, // New Center Action
-        { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' },
         { to: '/friends', icon: <User size={24} />, label: '好友' },
-        ...(user?.role === 'admin' ? [{ to: '/admin', icon: <Compass size={24} />, label: '管理' }] : []),
+        { to: '/compose', icon: <PenTool size={24} />, label: '发帖', highlight: true }, // Absolute Center
+        { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' },
         { to: user ? '/profile' : '/login', icon: user ? <div className="w-5 h-5 rounded-full bg-oat-200 border-2 border-current" /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
     ];
 

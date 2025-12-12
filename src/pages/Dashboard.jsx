@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import { ArrowRight, Flame, MessageSquare, Heart, Eye } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { ArrowRight, Flame, MessageSquare, Heart, Eye, Ship } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
 export default function Dashboard() {
+    const { user } = useAuth();
     const [channels, setChannels] = useState([]);
     const [hotPosts, setHotPosts] = useState([]);
     const API_URL = import.meta.env.VITE_API_URL || '';
@@ -33,17 +35,43 @@ export default function Dashboard() {
             <Sidebar />
 
             <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
-                {/* Welcome Banner */}
-                <div className="bg-oat-100 rounded-3xl p-8 md:p-12 text-ink mb-12 shadow-sm relative overflow-hidden border border-oat-200">
-                    <div className="relative z-10">
-                        <h1 className="text-3xl md:text-5xl font-serif font-bold mb-4 text-haze-900">欢迎回家，陌生人。</h1>
-                        <p className="text-haze-700/80 text-lg md:text-xl max-w-2xl font-serif">
-                            这是一个温暖的角落。在这里，你可以卸下防备，诉说心事，或者静静地阅读他人的故事。
-                        </p>
+
+                {/* Header: Logo & Greeting */}
+                <div className="mb-8 pt-4">
+                    <div className="flex items-center gap-2 mb-4 opacity-50">
+                        <span className="font-hand text-xl tracking-widest">THE STRANGERS</span>
                     </div>
-                    {/* Decorative Circles */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/40 rounded-full -translate-y-1/2 translate-x-1/4 blur-3xl" />
+                    <h1 className="text-2xl md:text-4xl font-serif font-bold text-haze-900 leading-tight">
+                        欢迎回家，
+                        <span className="text-haze-600 border-b-4 border-oat-200 inline-block px-1">
+                            {user ? user.username : '陌生人'}
+                        </span>。
+                    </h1>
                 </div>
+
+                {/* Drifting Bottle (Prominent Entry) */}
+                <section className="mb-10">
+                    <Link to="/drifting" className="block relative w-full bg-gradient-to-br from-haze-500 to-haze-400 rounded-3xl p-6 md:p-8 shadow-lg shadow-haze-200/50 hover:shadow-xl hover:-translate-y-1 transition-all group overflow-hidden">
+                        <div className="relative z-10 flex justify-between items-center text-white">
+                            <div>
+                                <h2 className="text-2xl font-bold font-serif mb-2 flex items-center gap-2">
+                                    <Ship className="animate-pulse" /> 漂流瓶
+                                </h2>
+                                <p className="text-haze-50 opacity-90 text-sm md:text-base font-medium max-w-sm">
+                                    去海边捡一个瓶子，或者把心事写进信笺，扔向无尽的蔚蓝。
+                                </p>
+                            </div>
+                            <div className="hidden md:block">
+                                <span className="px-5 py-2 bg-white/20 backdrop-blur-sm rounded-full font-bold text-sm border border-white/30 group-hover:bg-white/30 transition-colors">
+                                    即刻启程 &rarr;
+                                </span>
+                            </div>
+                        </div>
+                        {/* Decor */}
+                        <Ship size={120} className="absolute -bottom-6 -right-6 text-white/10 rotate-12 group-hover:rotate-6 transition-transform duration-700" />
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                    </Link>
+                </section>
 
                 {/* Hot Topics (Dominant) */}
                 <section className="mb-12">
