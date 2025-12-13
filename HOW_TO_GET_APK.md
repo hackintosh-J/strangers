@@ -17,12 +17,19 @@ npm run deploy
 3. 点击 **Start**。
 4. 等待评估完成，你应该会看到 "Android" 选项。
 5. 点击 **Store Package** 或 **Generate** (Android)。
-6. 在弹出的选项中：
-   - **Signing Key**: 选择 "None" 或 "PWABuilder Key" (用于测试/朋友使用，这最简单)。
-   - 点击 **Download**。
+6. 在弹出的 **Android Options** 窗口中，这是最关键的一步：
+   - **Signing Key**: 千万不要选 "None"。
+   - 请选择 **"Create a new key"** (或 "Use PWABuilder Key")。
+   - 填写简单的信息（名字随意填），然后点击 **"Done"**。
+   - 最后点击 **"Download"**。
+
+### ⚠️ 关于 "Unsigned" (未签名)
+如果你下载的 APK 是 Unsigned (未签名) 的，**安卓手机是无法安装的**。必须要有签名（哪怕是自己生成的签名）才能安装。
 
 ## 步骤 3: 发送给朋友
-你会下载到一个 `.zip` 文件，解压后里面会有一个 `.apk` 文件 (通常在 `android/app/build/outputs/apk/debug/` 或类似路径，或者直接就在根目录)。
+下载下来的 `zip` 包里，解压后请找到 **signed.apk** (通常在 `android/app/build/outputs/apk/release/app-release-signed.apk` 或者类似带有 `signed` 字样的文件)。
+
+**不要**要把 `unsigned.apk` 发给她，要发那个 **`signed.apk`** 或 **`universal.apk`**。
 
 直接把这个 `.apk` 发送给你的安卓朋友安装即可！
 
