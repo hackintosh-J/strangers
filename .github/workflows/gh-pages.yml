@@ -38,7 +38,7 @@ jobs:
         # If your repo is at https://github.com/user/repo, you might need: 
         # run: npx vite build --base=/repo-name/
         # For now, default build suitable for custom domains or user sites.
-        run: npm run build
+        run: npx vite build --base=/strangers/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

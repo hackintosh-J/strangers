@@ -52,7 +52,7 @@ export default defineConfig({
             }
         })
     ],
-    base: './', // Use relative paths for assets to work on GH Pages subpaths
+    base: '/', // Default to absolute for Cloudflare/Prod
     server: {
         proxy: {
             '/api': {
