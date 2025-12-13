@@ -52,13 +52,29 @@ export default function Chat() {
         return `${API_URL}/api/direct_messages/${id}?limit=20&cursor=${cursor}`;
     };
 
-    const fetcher = (url) => fetch(url, { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json());
+    const fetcher = async (url) => {
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        if (res.status === 401) {
+            throw new Error('Unauthorized');
+        }
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+    };
 
-    const { data, size, setSize, mutate: mutateMessages, isLoading } = useSWRInfinite(getKey, fetcher, {
+    const { data, size, setSize, mutate: mutateMessages, isLoading, error } = useSWRInfinite(getKey, fetcher, {
         refreshInterval: 10000,
         revalidateOnFocus: true,
-        revalidateFirstPage: false
+        revalidateFirstPage: false,
+        shouldRetryOnError: false
     });
+
+    useEffect(() => {
+        if (error && error.message === 'Unauthorized') {
+            // Optional: Redirect to login or show toast
+            // navigate('/login'); 
+            // Let's just show proper UI state
+        }
+    }, [error]);
 
     // Flatten data
     useEffect(() => {
@@ -292,6 +308,13 @@ export default function Chat() {
         );
     };
 
+    if (error) return (
+        <div className="flex flex-col h-full bg-oat-50 items-center justify-center p-8 text-center">
+            <div className="text-rose-500 font-bold mb-2">连接断开</div>
+            <p className="text-sm text-oat-400 mb-4">请尝试重新登录</p>
+            <button onClick={() => navigate('/login')} className="px-6 py-2 bg-haze-600 text-white rounded-full">去登录</button>
+        </div>
+    );
     if (!data && !messages.length) return <div className="text-center p-10">Loading...</div>;
 
     return (
