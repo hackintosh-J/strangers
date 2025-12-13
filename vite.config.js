@@ -8,7 +8,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+            includeAssets: ['favicon.ico', 'ios-icon-v2.png', 'mask-icon.svg'],
             manifest: {
                 id: './',
                 name: 'Strangers - 温暖的陌生人',
