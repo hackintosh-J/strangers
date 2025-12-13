@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Home, Compass, MessageSquare, Menu, User, LogIn, Ship, Sparkles, PenTool } from 'lucide-react';
@@ -7,15 +8,45 @@ export default function Sidebar() {
     const { user, logout } = useAuth();
     const location = useLocation();
 
+    // Notifications
+    const API_URL = import.meta.env.VITE_API_URL || '';
+    // Poll for notifications
+    const { data: notifs } = useSWR(
+        user ? `${API_URL}/api/notifications/status` : null,
+        (url) => fetch(url, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()),
+        { refreshInterval: 15000 }
+    );
+
+    // Check localStorage for last viewed follower
+    const [hasNewFollower, setHasNewFollower] = useState(false);
+    useEffect(() => {
+        if (notifs?.latest_follower_at) {
+            const lastSeen = parseInt(localStorage.getItem('last_seen_follower_at') || '0');
+            if (notifs.latest_follower_at > lastSeen) {
+                setHasNewFollower(true);
+            }
+        }
+    }, [notifs]);
+
     const NAV_ITEMS = [
         { to: '/', icon: <Home size={24} />, label: '首页' },
-        { to: '/friends', icon: <User size={24} />, label: '好友' },
+        {
+            to: '/friends',
+            icon: <User size={24} />,
+            label: '好友',
+            badge: notifs?.unread_dm_count > 0 // Show red dot if unread messages
+        },
         { to: '/compose', icon: <PenTool size={24} />, label: '发帖', highlight: true }, // Absolute Center
         { to: '/echo', icon: <Sparkles size={24} />, label: 'Echo' },
-        { to: user ? '/profile' : '/login', icon: user ? <div className="w-5 h-5 rounded-full bg-oat-200 border-2 border-current" /> : <LogIn size={24} />, label: user ? '我的' : '入驻' },
+        {
+            to: user ? '/profile' : '/login',
+            icon: user ? <div className="w-5 h-5 rounded-full bg-oat-200 border-2 border-current" /> : <LogIn size={24} />,
+            label: user ? '我的' : '入驻',
+            badge: hasNewFollower
+        },
     ];
 
-    const NavItem = ({ to, icon, label, highlight, exact = false }) => {
+    const NavItem = ({ to, icon, label, highlight, exact = false, badge }) => {
         const isActive = exact ? location.pathname === to : location.pathname.startsWith(to);
 
         // Highlight style (Center Button)
@@ -34,7 +65,7 @@ export default function Sidebar() {
             <Link
                 to={to}
                 className={`
-          flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-4 md:px-6 md:py-3.5 rounded-xl transition-all duration-300
+          flex flex-col md:flex-row items-center justify-center md:justify-start gap-1 md:gap-4 md:px-6 md:py-3.5 rounded-xl transition-all duration-300 relative
           ${isActive
                         ? 'text-haze-600 md:bg-haze-50 font-bold'
                         : 'text-oat-400 hover:text-haze-500 md:hover:bg-oat-50'
@@ -44,9 +75,11 @@ export default function Sidebar() {
                 <div className="relative">
                     {icon}
                     {isActive && <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-haze-500 rounded-full md:hidden" />}
+                    {badge && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white md:border-oat-50" />}
                 </div>
                 {/* Show text on mobile, smaller */}
                 <span className="text-[10px] md:text-sm font-medium tracking-wide">{label}</span>
+                {badge && <span className="hidden md:block w-2 h-2 bg-red-500 rounded-full" />}
             </Link>
         );
     };

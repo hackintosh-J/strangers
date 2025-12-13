@@ -862,6 +862,64 @@ app.post('/api/direct_messages', authMiddleware, async (c) => {
     return c.json({ success: true });
 });
 
+// Mark messages as read
+app.post('/api/direct_messages/:partnerId/read', authMiddleware, async (c) => {
+    const partnerId = c.req.param('partnerId');
+    const user = c.get('jwtPayload');
+
+    await c.env.DB.prepare(
+        "UPDATE direct_messages SET is_read = 1 WHERE sender_id = ? AND receiver_id = ?"
+    ).bind(partnerId, user.id).run();
+
+    return c.json({ success: true });
+});
+
+// Notifications Status
+app.get('/api/notifications/status', authMiddleware, async (c) => {
+    const user = c.get('jwtPayload');
+
+    // Count unread DMs
+    const { unread_count } = await c.env.DB.prepare(
+        "SELECT COUNT(*) as unread_count FROM direct_messages WHERE receiver_id = ? AND is_read = 0"
+    ).bind(user.id).first();
+
+    // Get latest follower timestamp
+    const { latest_follower } = await c.env.DB.prepare(
+        "SELECT MAX(created_at) as latest_follower FROM follows WHERE following_id = ?"
+    ).bind(user.id).first();
+
+    return c.json({
+        unread_dm_count: unread_count || 0,
+        latest_follower_at: latest_follower || 0
+    });
+});
+
+// Get Followers
+app.get('/api/users/:id/followers', async (c) => {
+    const id = c.req.param('id');
+    const { results } = await c.env.DB.prepare(`
+        SELECT u.id, u.username, u.last_active_at, f.created_at
+        FROM follows f
+        JOIN users u ON f.follower_id = u.id
+        WHERE f.following_id = ?
+        ORDER BY f.created_at DESC
+    `).bind(id).all();
+    return c.json(results);
+});
+
+// Get Following
+app.get('/api/users/:id/following', async (c) => {
+    const id = c.req.param('id');
+    const { results } = await c.env.DB.prepare(`
+        SELECT u.id, u.username, u.last_active_at, f.created_at
+        FROM follows f
+        JOIN users u ON f.following_id = u.id
+        WHERE f.follower_id = ?
+        ORDER BY f.created_at DESC
+    `).bind(id).all();
+    return c.json(results);
+});
+
 // Revoke DM
 app.post('/api/direct_messages/:id/revoke', authMiddleware, async (c) => {
     const msgId = c.req.param('id');

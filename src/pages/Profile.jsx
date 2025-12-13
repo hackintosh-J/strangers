@@ -64,11 +64,64 @@ export default function Profile() {
         } catch (e) { alert('Error'); mutate(); }
     };
 
+    // Modal State
+    const [activeModal, setActiveModal] = useState(null); // 'followers' | 'following' | null
+
+    const Modal = ({ type, onClose }) => {
+        const title = type === 'followers' ? '粉丝' : '关注';
+        const { data: list } = useSWR(
+            `${API_URL}/api/users/${targetId}/${type}`,
+            (url) => fetch(url, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+        );
+
+        // Update local storage if viewing own followers
+        useEffect(() => {
+            if (isSelf && type === 'followers' && list && list.length > 0) {
+                // Find latest created_at
+                const latest = Math.max(...list.map(u => u.created_at));
+                localStorage.setItem('last_seen_follower_at', latest);
+            }
+        }, [list]);
+
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
+                <div className="bg-white rounded-2xl w-full max-w-sm max-h-[70vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+                    <div className="p-4 border-b border-oat-200 flex justify-between items-center">
+                        <h3 className="font-bold text-ink">{title}</h3>
+                        <button onClick={onClose} className="text-oat-400 hover:text-ink">✕</button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-2">
+                        {!list ? <div className="p-8 text-center text-oat-400">Loading...</div> : (
+                            list.length === 0 ? <div className="p-8 text-center text-oat-400">暂无{title}</div> : (
+                                <div className="space-y-1">
+                                    {list.map(u => (
+                                        <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-oat-50 rounded-xl cursor-pointer" onClick={() => { navigate(`/profile/${u.id}`); onClose(); }}>
+                                            <div className="w-10 h-10 rounded-full bg-haze-50 flex items-center justify-center text-haze-600 font-bold border border-oat-200">
+                                                {u.username[0].toUpperCase()}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-bold text-ink text-sm">{u.username}</div>
+                                                <div className="text-xs text-oat-400">
+                                                    {/* Show active? */}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center"><div className="animate-spin text-haze-400">...</div></div>;
     if (!profileUser) return null;
 
     return (
         <div className="flex min-h-screen bg-paper">
+            {activeModal && <Modal type={activeModal} onClose={() => setActiveModal(null)} />}
 
             <main className="flex-1 p-4 md:p-8 flex items-start justify-center pt-20">
                 <div className="w-full max-w-2xl bg-white rounded-3xl shadow-soft border border-oat-200 overflow-hidden relative">
@@ -137,11 +190,11 @@ export default function Profile() {
                                 <div className="text-xl font-bold text-ink font-serif">{stats.post_count}</div>
                                 <div className="text-xs text-oat-400 font-bold tracking-wider uppercase">帖子</div>
                             </div>
-                            <div className="text-center">
+                            <div className="text-center cursor-pointer hover:bg-oat-50 rounded-lg p-2 -m-2 transition-colors" onClick={() => setActiveModal('following')}>
                                 <div className="text-xl font-bold text-ink font-serif">{stats.following_count}</div>
                                 <div className="text-xs text-oat-400 font-bold tracking-wider uppercase">关注</div>
                             </div>
-                            <div className="text-center">
+                            <div className="text-center cursor-pointer hover:bg-oat-50 rounded-lg p-2 -m-2 transition-colors" onClick={() => setActiveModal('followers')}>
                                 <div className="text-xl font-bold text-ink font-serif">{stats.followers_count}</div>
                                 <div className="text-xs text-oat-400 font-bold tracking-wider uppercase">粉丝</div>
                             </div>
