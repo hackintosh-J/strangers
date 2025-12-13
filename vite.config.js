@@ -10,13 +10,13 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
             manifest: {
-                id: '/',
+                id: './',
                 name: 'Strangers - 温暖的陌生人',
                 short_name: 'Strangers',
                 description: '一个温暖的陌生人聊天应用',
                 theme_color: '#1a1a1a',
-                start_url: '/',
-                scope: '/',
+                start_url: './',
+                scope: './',
                 display: 'standalone',
                 background_color: '#ffffff',
                 icons: [
