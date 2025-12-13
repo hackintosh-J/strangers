@@ -8,6 +8,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
+            manifestFilename: 'manifest-v2.webmanifest', // Force new manifest URL
             includeAssets: ['favicon.ico', 'pwa-192x192.png', 'mask-icon.svg'],
             manifest: {
                 id: './',
