@@ -241,7 +241,7 @@ export default function Chat() {
                         </div>
                     )}
                     <div className={`text-[10px] mt-1 text-right ${isMe ? 'text-haze-200' : 'text-oat-400'}`}>
-                        {new Date(msg.created_at).toLocaleTimeString()}
+                        {new Date(msg.created_at * 1000).toLocaleTimeString()}
                     </div>
                 </div>
             </div>

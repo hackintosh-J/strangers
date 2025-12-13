@@ -159,7 +159,7 @@ export default function Profile() {
                         {/* Info */}
                         <h1 className="text-2xl font-serif font-bold text-ink mb-1">{profileUser.username}</h1>
                         <div className="flex items-center gap-4 text-sm text-oat-400 mb-6 font-medium">
-                            <span className="flex items-center gap-1"><Calendar size={14} /> {new Date(profileUser.created_at).toLocaleDateString()} 加入</span>
+                            <span className="flex items-center gap-1"><Calendar size={14} /> {new Date(profileUser.created_at * 1000).toLocaleDateString()} 加入</span>
                             {profileUser.last_active_at && (
                                 <span className="flex items-center gap-1">
                                     <div className={`w-2 h-2 rounded-full ${(Date.now() / 1000 - profileUser.last_active_at) < 300 ? 'bg-green-400' : 'bg-gray-300'}`} />
