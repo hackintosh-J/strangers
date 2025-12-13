@@ -11,13 +11,13 @@ export default defineConfig({
             manifestFilename: 'manifest-v2.webmanifest', // Force new manifest URL
             includeAssets: ['favicon.ico', 'pwa-192x192.png', 'mask-icon.svg'],
             manifest: {
-                id: './',
+                id: '/',
                 name: 'Strangers',
                 short_name: 'Strangers',
                 description: '一个温暖的陌生人聊天应用',
                 theme_color: '#1a1a1a',
-                start_url: './',
-                scope: './',
+                start_url: '/',
+                scope: '/',
                 display: 'standalone',
                 background_color: '#ffffff',
                 icons: [
