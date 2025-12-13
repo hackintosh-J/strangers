@@ -15,6 +15,10 @@ export default defineConfig({
                 short_name: 'Strangers',
                 description: '一个温暖的陌生人聊天应用',
                 theme_color: '#1a1a1a',
+                start_url: '/',
+                scope: '/',
+                display: 'standalone',
+                background_color: '#ffffff',
                 icons: [
                     {
                         src: 'pwa-192x192.png',
@@ -46,7 +50,7 @@ export default defineConfig({
             }
         })
     ],
-    base: './', // Use relative paths for assets to work on GH Pages subpaths
+    base: '/', // Use absolute path for root domain deployment
     server: {
         proxy: {
             '/api': {
