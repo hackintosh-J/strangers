@@ -8,10 +8,10 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.ico', 'ios-icon-v2.png', 'mask-icon.svg'],
+            includeAssets: ['favicon.ico', 'pwa-192x192.png', 'mask-icon.svg'],
             manifest: {
                 id: './',
-                name: 'Strangers - 温暖的陌生人',
+                name: 'Strangers',
                 short_name: 'Strangers',
                 description: '一个温暖的陌生人聊天应用',
                 theme_color: '#1a1a1a',
