@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+
 import { useAuth } from '../hooks/useAuth';
 import { PenTool, ChevronDown, Loader2 } from 'lucide-react';
 
@@ -73,7 +73,7 @@ export default function Compose() {
 
     return (
         <div className="flex min-h-screen bg-paper">
-            <Sidebar />
+
             <main className="flex-1 w-full max-w-3xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft">
                 {/* Header */}
                 <div className="p-4 border-b border-oat-200 flex justify-between items-center bg-white/95 backdrop-blur sticky top-0 z-10">

@@ -1,56 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import Sidebar from '../components/Sidebar';
+import useSWR from 'swr';
+
 import { useAuth } from '../hooks/useAuth';
 import { Link } from 'react-router-dom';
 import { MessageCircle, UserCheck, Loader2 } from 'lucide-react';
 
 export default function Friends() {
     const { user, token } = useAuth();
-    const [friends, setFriends] = useState([]);
-    const [loading, setLoading] = useState(true);
+
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
-    useEffect(() => {
-        if (!token) return;
+    const fetcher = (url) => fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    }).then(res => res.json());
 
-        // Check Cache
-        const cacheKey = `friends_cache_${user?.id}`;
-        try {
-            const cached = sessionStorage.getItem(cacheKey);
-            if (cached) {
-                const { data, timestamp } = JSON.parse(cached);
-                if (Date.now() - timestamp < 60000) { // 1 min cache
-                    setFriends(data);
-                    setLoading(false);
-                    return; // Skip fetch if cached
-                }
-            }
-        } catch (e) {
-            sessionStorage.removeItem(cacheKey);
-        }
-
-        fetch(`${API_URL}/api/friends`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    setFriends(data);
-                    // Set Cache
-                    sessionStorage.setItem(cacheKey, JSON.stringify({
-                        data,
-                        timestamp: Date.now()
-                    }));
-                }
-            })
-            .catch(console.error)
-            .finally(() => setLoading(false));
-    }, [token, user?.id]);
+    const { data: friendsData, isLoading } = useSWR(token ? `${API_URL}/api/friends` : null, fetcher);
+    const friends = friendsData || [];
+    const loading = isLoading;
 
     return (
         <div className="flex min-h-screen bg-paper">
-            <Sidebar />
+
             <main className="flex-1 p-4 md:p-8">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-2xl font-serif font-bold text-ink mb-6 flex items-center gap-2">

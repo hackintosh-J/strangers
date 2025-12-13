@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+
 import PostListItem from '../components/PostListItem';
 import { PenSquare } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -81,7 +81,7 @@ export default function ChannelFeed() {
 
     return (
         <div className="flex min-h-screen bg-paper">
-            <Sidebar />
+
 
             <main className="flex-1 md:ml-0 w-full max-w-4xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft pb-24 md:pb-0">
                 {/* Header */}

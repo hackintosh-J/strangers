@@ -3,7 +3,7 @@ import { Routes, Route, BrowserRouter, HashRouter, useLocation } from 'react-rou
 import { AuthProvider } from './hooks/useAuth';
 import { useAuth } from './hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import MainLayout from './layouts/MainLayout';
 
 // Lazy Load Pages
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -44,72 +44,6 @@ const LoadingScreen = () => (
     </div>
 );
 
-// Animated Page Wrapper
-const PageWrapper = ({ children }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="w-full"
-    >
-        {children}
-    </motion.div>
-);
-
-function AnimatedRoutes() {
-    const location = useLocation();
-
-    return (
-        <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-                <Route path="/" element={<Index />} />
-                <Route path="/home" element={
-                    <PageWrapper><Dashboard /></PageWrapper>
-                } />
-
-                <Route path="/channel/:slug" element={
-                    <PageWrapper><ChannelFeed /></PageWrapper>
-                } />
-                <Route path="/post/:id" element={
-                    <PageWrapper><PostDetail /></PageWrapper>
-                } />
-                <Route path="/drifting" element={
-                    <PageWrapper><Drifting /></PageWrapper>
-                } />
-                <Route path="/echo" element={
-                    <PageWrapper><Echo /></PageWrapper>
-                } />
-                <Route path="/compose" element={
-                    <PageWrapper><Compose /></PageWrapper>
-                } />
-                <Route path="/friends" element={
-                    <PageWrapper><Friends /></PageWrapper>
-                } />
-                <Route path="/chat/:id" element={
-                    <PageWrapper><Chat /></PageWrapper>
-                } />
-
-                <Route path="/login" element={
-                    <PageWrapper><Login /></PageWrapper>
-                } />
-                <Route path="/admin" element={
-                    <PageWrapper><Admin /></PageWrapper>
-                } />
-                <Route path="/profile" element={
-                    <PageWrapper><Profile /></PageWrapper>
-                } />
-                <Route path="/profile/:id" element={
-                    <PageWrapper><Profile /></PageWrapper>
-                } />
-                <Route path="/about" element={
-                    <PageWrapper><About /></PageWrapper>
-                } />
-            </Routes>
-        </AnimatePresence>
-    );
-}
-
 function App() {
     // Hybrid Router: Use HashRouter for GitHub Pages (to handle subpaths/404s), BrowserRouter for custom domain (clean URLs)
     const isGitHubPages = window.location.hostname.includes('github.io');
@@ -120,7 +54,26 @@ function App() {
             <Router>
                 <ScrollToTop />
                 <Suspense fallback={<LoadingScreen />}>
-                    <AnimatedRoutes />
+                    <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/about" element={<About />} />
+
+                        {/* Authenticated Routes with Persistent Layout */}
+                        <Route element={<MainLayout />}>
+                            <Route path="/home" element={<Dashboard />} />
+                            <Route path="/channel/:slug" element={<ChannelFeed />} />
+                            <Route path="/post/:id" element={<PostDetail />} />
+                            <Route path="/drifting" element={<Drifting />} />
+                            <Route path="/echo" element={<Echo />} />
+                            <Route path="/compose" element={<Compose />} />
+                            <Route path="/friends" element={<Friends />} />
+                            <Route path="/chat/:id" element={<Chat />} />
+                            <Route path="/admin" element={<Admin />} />
+                            <Route path="/profile" element={<Profile />} />
+                            <Route path="/profile/:id" element={<Profile />} />
+                        </Route>
+                    </Routes>
                 </Suspense>
             </Router>
         </AuthProvider>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { Link } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+
 import { useAuth } from '../hooks/useAuth';
 import { ArrowRight, Flame, MessageSquare, Heart, Eye, Ship } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -24,38 +25,23 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-    const { user } = useAuth();
-    const [channels, setChannels] = useState([]);
-    const [hotPosts, setHotPosts] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const { user, token } = useAuth();
     const API_URL = import.meta.env.VITE_API_URL || '';
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [channelsRes, postsRes] = await Promise.all([
-                    fetch(`${API_URL}/api/channels`),
-                    fetch(`${API_URL}/api/messages?sort=hot&limit=5`)
-                ]);
+    const fetcher = (url) => fetch(url, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    }).then(res => res.json());
 
-                const channelsData = await channelsRes.json();
-                const postsData = await postsRes.json();
+    const { data: channelsData } = useSWR(`${API_URL}/api/channels`, fetcher);
+    const { data: postsData, isLoading: postsLoading } = useSWR(`${API_URL}/api/messages?sort=hot&limit=5`, fetcher);
 
-                setChannels(channelsData);
-                if (postsData.data) setHotPosts(postsData.data);
-            } catch (error) {
-                console.error("Failed to fetch dashboard data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const channels = channelsData || [];
+    const hotPosts = postsData?.data || [];
+    const loading = !channelsData || postsLoading;
 
     return (
         <div className="flex min-h-screen bg-oat-50">
-            <Sidebar />
+
 
             <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 pb-24 md:pb-8">
 

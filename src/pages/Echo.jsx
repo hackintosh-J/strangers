@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../hooks/useAuth';
-import Sidebar from '../components/Sidebar';
+
 import { Send, Zap, BookOpen, Loader2, ImageIcon, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { compressImage } from '../utils/compress';
@@ -245,7 +245,7 @@ export default function Echo() {
 
     return (
         <div className="flex h-screen bg-oat-50">
-            <Sidebar />
+
             <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full bg-white shadow-soft h-full pb-20 md:pb-0">
                 {/* Header */}
                 <div className="p-4 border-b border-oat-200 flex justify-between items-center bg-white/95 backdrop-blur z-10">
@@ -346,11 +346,12 @@ import ReactMarkdown from 'react-markdown';
                                 const file = e.target.files[0];
                                 if (!file) return;
 
-                                // Size check handled by compression or server, but keeping soft limit or relying on compression
-                                // If compression fails or file is massive, we catch it.
+                                // Optimistic Preview
+                                const blobUrl = URL.createObjectURL(file);
+                                setAttachment({ url: blobUrl, name: file.name, uploading: true });
 
                                 try {
-                                    setLoading(true);
+                                    setLoading(true); // Keep loading true to prevent sending while uploading
                                     const compressedFile = await compressImage(file, 'ai');
 
                                     const formData = new FormData();
@@ -362,16 +363,18 @@ import ReactMarkdown from 'react-markdown';
                                     });
                                     if (res.ok) {
                                         const { url } = await res.json();
-                                        setAttachment({ url, name: file.name });
+                                        setAttachment({ url, name: file.name, uploading: false });
                                         // clear input file value so allow same file recheck?
                                         e.target.value = '';
                                     } else {
                                         const err = await res.json();
                                         alert(err.error || '上传失败');
+                                        setAttachment(null);
                                     }
                                 } catch (err) {
                                     console.error(err);
                                     alert('上传失败：' + err.message);
+                                    setAttachment(null);
                                 }
                                 finally { setLoading(false); }
                             }}
@@ -383,8 +386,9 @@ import ReactMarkdown from 'react-markdown';
                         {/* Attachment Preview */}
                         {attachment && (
                             <div className="absolute bottom-full mb-2 left-0 bg-white p-2 rounded-lg shadow-soft border border-oat-200 flex items-center gap-2 animate-fade-in-up">
-                                <div className="w-12 h-12 rounded bg-oat-100 overflow-hidden relative">
-                                    <img src={attachment.url} alt="preview" className="w-full h-full object-cover" />
+                                <div className="w-12 h-12 rounded bg-oat-100 overflow-hidden relative group">
+                                    <img src={attachment.url} alt="preview" className={`w-full h-full object-cover ${attachment.uploading ? 'opacity-50' : ''}`} />
+                                    {attachment.uploading && <div className="absolute inset-0 flex items-center justify-center"><Loader2 size={16} className="animate-spin text-ink" /></div>}
                                 </div>
                                 <span className="text-xs text-oat-500 max-w-[100px] truncate">{attachment.name}</span>
                                 <button

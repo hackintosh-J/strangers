@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+
 import Markdown from 'react-markdown';
 import { ArrowLeft, Clock, MessageSquare, Heart, Send, Trash2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -54,7 +54,7 @@ export default function PostDetail() {
 
     return (
         <div className="flex min-h-screen bg-paper">
-            <Sidebar />
+
 
             <main className="flex-1 w-full max-w-4xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft flex flex-col pb-20 md:pb-0">
                 {/* Nav Header */}

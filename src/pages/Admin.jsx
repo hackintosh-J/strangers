@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { Trash2, Key, User, MessageSquare } from 'lucide-react';
-import Sidebar from '../components/Sidebar';
+
 
 export default function Admin() {
     const { user, token } = useAuth();
@@ -116,7 +116,7 @@ export default function Admin() {
 
     return (
         <div className="flex min-h-screen bg-paper">
-            <Sidebar />
+
             <main className="flex-1 p-8">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-2xl font-bold mb-6 text-gray-800">管理面板</h1>

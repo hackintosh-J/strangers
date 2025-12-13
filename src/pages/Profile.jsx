@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
+import useSWR from 'swr';
+
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useParams } from 'react-router-dom';
 import { User, Calendar, MessageSquare, Users, Heart, Compass } from 'lucide-react';
@@ -10,95 +11,46 @@ export default function Profile() {
     const { id } = useParams(); // If id exists, viewing other. Else viewing self.
     const navigate = useNavigate();
 
-    const [profileUser, setProfileUser] = useState(null);
-    const [stats, setStats] = useState({ followers_count: 0, following_count: 0, post_count: 0 });
-    const [isFollowing, setIsFollowing] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    const API_URL = import.meta.env.VITE_API_URL || '';
-
-    // Determine target ID
-    const targetId = id || currentUser?.id;
-    const isSelf = !id || (currentUser && String(currentUser.id) === String(id));
-
-    useEffect(() => {
-        if (!targetId) {
-            if (!currentUser) navigate('/login');
-            return;
+    const { data: profileData, isLoading, mutate } = useSWR(
+        targetId && (token || !token) ? `${API_URL}/api/users/${targetId}/profile` : null,
+        async (url) => {
+            const res = await fetch(url, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
+            if (!res.ok) throw new Error('Failed to load profile');
+            return res.json();
         }
+    );
 
-        const fetchProfile = async () => {
-            // Check Cache
-            const cacheKey = `profile_cache_${targetId}`;
-            try {
-                const cached = sessionStorage.getItem(cacheKey);
-                if (cached) {
-                    const { user, stats, isFollowing, timestamp } = JSON.parse(cached);
-                    if (Date.now() - timestamp < 60000) { // 1 min cache
-                        setProfileUser(user);
-                        setStats(stats);
-                        setIsFollowing(isFollowing);
-                        setLoading(false);
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.warn('Cache parse error, clearing:', e);
-                sessionStorage.removeItem(cacheKey);
-            }
-
-            try {
-                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-                const res = await fetch(`${API_URL}/api/users/${targetId}/profile`, { headers });
-                if (res.ok) {
-                    const data = await res.json();
-                    setProfileUser(data.user);
-
-                    const newStats = {
-                        followers_count: data.user.followers_count || 0,
-                        following_count: data.user.following_count || 0,
-                        post_count: data.user.post_count || 0
-                    };
-                    setStats(newStats);
-                    setIsFollowing(data.is_following);
-
-                    // Set Cache
-                    sessionStorage.setItem(cacheKey, JSON.stringify({
-                        user: data.user,
-                        stats: newStats,
-                        isFollowing: data.is_following,
-                        timestamp: Date.now()
-                    }));
-
-                } else {
-                    // Handle 404
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchProfile();
-    }, [targetId, token]);
+    const profileUser = profileData?.user;
+    const isFollowing = profileData?.is_following;
+    const stats = {
+        followers_count: profileUser?.followers_count || 0,
+        following_count: profileUser?.following_count || 0,
+        post_count: profileUser?.post_count || 0
+    };
+    const loading = isLoading;
 
     const handleFollow = async () => {
         if (!currentUser) return navigate('/login');
         try {
+            // Optimistic update
+            const newIsFollowing = !isFollowing;
+            const newCount = stats.followers_count + (newIsFollowing ? 1 : -1);
+
+            mutate({
+                ...profileData,
+                is_following: newIsFollowing,
+                user: { ...profileUser, followers_count: newCount }
+            }, false); // false = don't revalidate immediately
+
             const res = await fetch(`${API_URL}/api/users/${targetId}/follow`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
             if (res.ok) {
-                const data = await res.json();
-                setIsFollowing(data.following);
-                setStats(prev => ({
-                    ...prev,
-                    followers_count: prev.followers_count + (data.following ? 1 : -1)
-                }));
+                mutate(); // Revalidate with server truth
             }
-        } catch (e) { alert('Error'); }
+        } catch (e) { alert('Error'); mutate(); }
     };
 
     if (loading) return <div className="min-h-screen bg-paper flex items-center justify-center"><div className="animate-spin text-haze-400">...</div></div>;
@@ -106,7 +58,7 @@ export default function Profile() {
 
     return (
         <div className="flex min-h-screen bg-paper">
-            <Sidebar />
+
             <main className="flex-1 p-4 md:p-8 flex items-start justify-center pt-20">
                 <div className="w-full max-w-2xl bg-white rounded-3xl shadow-soft border border-oat-200 overflow-hidden relative">
 

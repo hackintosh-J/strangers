@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+
 import { useAuth } from '../hooks/useAuth';
 import { Send, ArrowLeft, Loader2, RefreshCw, Mic, Smile, ImageIcon } from 'lucide-react';
 import StickerPicker from '../components/StickerPicker';
@@ -12,6 +12,7 @@ export default function Chat() {
     const navigate = useNavigate();
 
     const [messages, setMessages] = useState([]);
+    const [pendingMessages, setPendingMessages] = useState([]);
     const [input, setInput] = useState('');
     const [targetUser, setTargetUser] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -96,6 +97,30 @@ export default function Chat() {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Optimistic UI
+        const tempId = Date.now();
+        const blobUrl = URL.createObjectURL(file);
+        const tempMsg = {
+            id: tempId,
+            sender_id: user.id,
+            content: blobUrl, // Will be rendered as image because formatPayload logic is in render? No, renderMessage parses prefix.
+            // Wait, renderMessage expects prefix [image]... 
+            // So content needs prefix.
+            type: 'image', // My render logic uses prefix OR checks type?
+            // renderMessage logic:
+            // if (content.startsWith('[image]')) ...
+            // So we must fake the content string.
+            // content: `[image]${blobUrl}`,
+            created_at: Date.now() / 1000,
+            isPending: true
+        };
+        // renderMessage logic checks for prefix IN LOOP.
+        // Let's make sure tempMsg matches structure.
+        // My renderMessage parses `msg.content`. 
+        // So I should set content: `[image]${blobUrl}`.
+
+        setPendingMessages(prev => [...prev, { ...tempMsg, content: `[image]${blobUrl}` }]);
+
         try {
             setSending(true);
             const compressedFile = await compressImage(file, 'storage');
@@ -109,12 +134,18 @@ export default function Chat() {
             });
             if (res.ok) {
                 const { url } = await res.json();
-                handleSend(formatPayload(url, 'image'));
+                await handleSend(formatPayload(url, 'image'), 'image');
             } else {
                 const err = await res.json();
                 alert(err.error || 'Upload failed');
             }
-        } catch (e) { alert('Upload error: ' + e.message); }
+        } catch (e) {
+            alert('Upload error: ' + e.message);
+        } finally {
+            // Remove pending
+            setPendingMessages(prev => prev.filter(m => m.id !== tempId));
+            setSending(false);
+        }
     };
 
     const toggleRecord = async () => {
@@ -228,7 +259,7 @@ export default function Chat() {
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
                 <div
                     onContextMenu={(e) => handleContextMenu(e, msg)}
-                    className={`max-w-[75%] rounded-2xl p-4 shadow-sm relative ${isMe ? 'bg-haze-600 text-white rounded-br-none' : 'bg-white text-ink border border-oat-200 rounded-bl-none'}`}
+                    className={`max-w-[75%] rounded-2xl p-4 shadow-sm relative ${isMe ? 'bg-haze-600 text-white rounded-br-none' : 'bg-white text-ink border border-oat-200 rounded-bl-none'} ${msg.isPending ? 'opacity-70' : ''}`}
                 >
                     {type === 'text' && <p>{content}</p>}
                     {type === 'image' && <img src={content} alt="img" className="rounded-lg max-h-60 cursor-pointer" onClick={() => window.open(content)} />}
@@ -251,7 +282,7 @@ export default function Chat() {
     if (loading) return <div className="text-center p-10">Loading...</div>;
 
     return (
-        <div className="flex flex-col h-screen bg-oat-50">
+        <div className="flex flex-col h-full bg-oat-50">
             {/* Header */}
             <div className="bg-white border-b border-oat-200 px-4 py-3 flex items-center gap-3 shadow-sm z-10">
                 <Link to="/friends" className="p-2 hover:bg-oat-100 rounded-full text-oat-500"><ArrowLeft size={20} /></Link>
@@ -269,7 +300,7 @@ export default function Chat() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 relative">
-                {messages.map(renderMessage)}
+                {[...messages, ...pendingMessages].map(renderMessage)}
                 <div ref={scrollRef} />
 
                 {contextMenu && (
