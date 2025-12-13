@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
 import { Send, Zap, BookOpen, Loader2, ImageIcon, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { compressImage } from '../utils/compress';
 
 export default function Echo() {
@@ -16,10 +16,23 @@ export default function Echo() {
     const fileInputRef = useRef(null);
     const [attachment, setAttachment] = useState(null);
 
+    const [searchParams] = useSearchParams();
+
     // Greeting Logic
     const [greeting, setGreeting] = useState('');
 
     useEffect(() => {
+        const isOnboarding = searchParams.get('onboarding') === 'true';
+
+        if (isOnboarding && messages.length === 0) {
+            setGreeting('欢迎来到 Strangers。');
+            setMessages([{
+                role: 'assistant',
+                content: `很高兴遇见你。我是 Echo。\n\n这里是一个没有面具的角落。你不需要伪装快乐，也不需要隐藏脆弱。\n\n试着告诉我，此时此刻，你最真实的感受是什么？或者，仅仅是一张你眼前的照片。`
+            }]);
+            return;
+        }
+
         const hour = new Date().getHours();
         let greet = '你好';
         if (hour < 6) greet = '凌晨了，还不睡吗？';

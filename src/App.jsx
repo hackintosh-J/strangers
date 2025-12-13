@@ -14,6 +14,22 @@ import Compose from './pages/Compose';
 import Friends from './pages/Friends';
 import Chat from './pages/Chat';
 import { useAuth } from './hooks/useAuth';
+import Welcome from './pages/Welcome';
+import { useNavigate } from 'react-router-dom';
+
+function Index() {
+    const { user, loading } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!loading && user) {
+            navigate('/home');
+        }
+    }, [user, loading, navigate]);
+
+    if (loading) return null; // Or a spinner
+    return user ? null : <Welcome />;
+}
 
 function App() {
     return (
@@ -21,7 +37,9 @@ function App() {
             <HashRouter>
                 <ScrollToTop />
                 <Routes>
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/" element={<Index />} />
+                    <Route path="/home" element={<Dashboard />} />
+
                     <Route path="/channel/:slug" element={<ChannelFeed />} />
                     <Route path="/post/:id" element={<PostDetail />} />
                     <Route path="/drifting" element={<Drifting />} />

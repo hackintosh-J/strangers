@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
 export default function Login() {
-    const [isRegister, setIsRegister] = useState(false);
+    const [searchParams] = useSearchParams();
+    const [isRegister, setIsRegister] = useState(searchParams.get('register') === 'true');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const { login, register } = useAuth();
@@ -20,8 +21,12 @@ export default function Login() {
         const res = await action(username, password);
 
         if (res.success) {
-            if (isRegister) await login(username, password); // Auto login
-            navigate('/');
+            if (isRegister) {
+                await login(username, password); // Auto login
+                navigate('/echo?onboarding=true');
+            } else {
+                navigate('/');
+            }
         } else {
             setError(res.error || '操作失败');
         }
