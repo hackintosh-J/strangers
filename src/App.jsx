@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, HashRouter, useLocation } from 'react-router-dom';
+import { Routes, Route, BrowserRouter, useLocation } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -34,7 +34,7 @@ function Index() {
 function App() {
     return (
         <AuthProvider>
-            <HashRouter>
+            <BrowserRouter>
                 <ScrollToTop />
                 <Routes>
                     <Route path="/" element={<Index />} />
@@ -54,7 +54,7 @@ function App() {
                     <Route path="/profile/:id" element={<Profile />} />
                     <Route path="/about" element={<About />} />
                 </Routes>
-            </HashRouter>
+            </BrowserRouter>
         </AuthProvider>
     );
 }

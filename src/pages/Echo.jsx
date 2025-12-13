@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
 import { Send, Zap, BookOpen, Loader2, ImageIcon, X } from 'lucide-react';
@@ -282,10 +283,15 @@ export default function Echo() {
                                         ? 'bg-indigo-50 text-indigo-600 text-center text-xs py-2 w-full border border-indigo-100 shadow-sm'
                                         : 'bg-oat-100 text-ink rounded-tl-none'
                                 }
+import ReactMarkdown from 'react-markdown';
+
+// ... (in the render loop)
+
                             `}>
                                 {(() => {
                                     // Robust rendering for mixed text/image
                                     // Trim start to avoid empty first lines
+                                    // Split by [image]URL pattern
                                     const parts = msg.content.trimStart().split(/(\[image\]https?:\/\/[^\s]+)/g);
                                     return parts.map((part, pIdx) => {
                                         if (part.startsWith('[image]')) {
@@ -293,16 +299,19 @@ export default function Echo() {
                                             return <img key={pIdx} src={src} alt="content" className="rounded-lg max-h-60 my-2 block" />;
                                         }
                                         if (!part.trim()) return null;
-                                        // Render Text with newlines
+
+                                        // Render Text with Markdown support
                                         return (
-                                            <span key={pIdx}>
-                                                {part.split('\n').map((line, lIdx) => (
-                                                    <React.Fragment key={lIdx}>
-                                                        {line}
-                                                        {lIdx !== part.split('\n').length - 1 && <br />}
-                                                    </React.Fragment>
-                                                ))}
-                                            </span>
+                                            <div key={pIdx} className="markdown-prose">
+                                                <ReactMarkdown
+                                                    components={{
+                                                        p: ({ node, ...props }) => <p className="mb-1 last:mb-0" {...props} />,
+                                                        a: ({ node, ...props }) => <a className="underline opacity-80 hover:opacity-100" target="_blank" {...props} />
+                                                    }}
+                                                >
+                                                    {part}
+                                                </ReactMarkdown>
+                                            </div>
                                         );
                                     });
                                 })()}
