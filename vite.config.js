@@ -29,14 +29,14 @@ export default defineConfig({
                 ],
                 screenshots: [
                     {
-                        src: 'screenshot-mobile.png',
+                        src: 'screenshot-mobile-v2.png',
                         sizes: '1080x1920',
                         type: 'image/png',
                         form_factor: 'narrow',
                         label: 'Mobile Home Screen'
                     },
                     {
-                        src: 'screenshot-desktop.png',
+                        src: 'screenshot-desktop-v2.png',
                         sizes: '1920x1080',
                         type: 'image/png',
                         form_factor: 'wide',
