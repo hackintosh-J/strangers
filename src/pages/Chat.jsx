@@ -30,7 +30,7 @@ export default function Chat() {
         if (!token) return;
 
         // Fetch Partner Info
-        fetch(`${API_URL} /api/users / ${id}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${API_URL}/api/users/${id}/profile`, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => setTargetUser(data))
             .catch(console.error);
