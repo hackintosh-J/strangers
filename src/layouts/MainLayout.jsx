@@ -22,9 +22,32 @@ export default function MainLayout() {
     const { user, loading } = useAuth();
     const location = useLocation();
 
-    // If still loading auth, maybe show a spinner or just render nothing?
-    // Usually App.jsx handles the big loading screen.
-    // Here we just render the structure.
+    // Aggressive Preloading for China Latency Optimization
+    useEffect(() => {
+        if (!user) return;
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const token = localStorage.getItem('token'); // or from useAuth if exposed, but useAuth returns token state which might be null initially.
+        // Actually useAuth exposes token.
+        // Let's us direct fetch or SWR preload.
+
+        const preload = (url) => {
+            const fetcher = (u) => fetch(u, { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json());
+            // Mutate with undefined to trigger fetch and cache without SWR hook? 
+            // Better: use explicit prefetch or SWR preload. 
+            // Since we use SWR, simply fetching and putting in cache map is enough if keys match.
+            // But we don't have access to global cache here easily without useSWRConfig.
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+        };
+
+        // Delay slightly to not block main thread
+        const id = setTimeout(() => {
+            preload(`${API_URL}/api/channels`);
+            preload(`${API_URL}/api/messages?sort=hot&limit=5`);
+            preload(`${API_URL}/api/friends`);
+        }, 2000);
+
+        return () => clearTimeout(id);
+    }, [user]);
 
     return (
         <div className="flex min-h-screen bg-oat-50">

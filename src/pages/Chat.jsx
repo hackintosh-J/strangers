@@ -292,7 +292,7 @@ export default function Chat() {
         );
     };
 
-    if (!messagesData && !messages.length) return <div className="text-center p-10">Loading...</div>;
+    if (!data && !messages.length) return <div className="text-center p-10">Loading...</div>;
 
     return (
         <div className="flex flex-col h-full bg-oat-50">
