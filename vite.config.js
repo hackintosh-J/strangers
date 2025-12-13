@@ -52,7 +52,7 @@ export default defineConfig({
             }
         })
     ],
-    base: '/', // Use absolute path for root domain deployment
+    base: './', // Use relative paths for assets to work on GH Pages subpaths
     server: {
         proxy: {
             '/api': {

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, BrowserRouter, useLocation } from 'react-router-dom';
+import { Routes, Route, BrowserRouter, HashRouter, useLocation } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -32,9 +32,13 @@ function Index() {
 }
 
 function App() {
+    // Hybrid Router: Use HashRouter for GitHub Pages (to handle subpaths/404s), BrowserRouter for custom domain (clean URLs)
+    const isGitHubPages = window.location.hostname.includes('github.io');
+    const Router = isGitHubPages ? HashRouter : BrowserRouter;
+
     return (
         <AuthProvider>
-            <BrowserRouter>
+            <Router>
                 <ScrollToTop />
                 <Routes>
                     <Route path="/" element={<Index />} />
@@ -54,7 +58,7 @@ function App() {
                     <Route path="/profile/:id" element={<Profile />} />
                     <Route path="/about" element={<About />} />
                 </Routes>
-            </BrowserRouter>
+            </Router>
         </AuthProvider>
     );
 }
