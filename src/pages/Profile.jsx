@@ -11,12 +11,23 @@ export default function Profile() {
     const { id } = useParams(); // If id exists, viewing other. Else viewing self.
     const navigate = useNavigate();
 
+    const API_URL = import.meta.env.VITE_API_URL || '';
+
+    // Determine target ID
+    const targetId = id || currentUser?.id;
+    const isSelf = !id || (currentUser && String(currentUser.id) === String(id));
+
     const { data: profileData, isLoading, mutate } = useSWR(
         targetId && (token || !token) ? `${API_URL}/api/users/${targetId}/profile` : null,
         async (url) => {
             const res = await fetch(url, { headers: token ? { 'Authorization': `Bearer ${token}` } : {} });
             if (!res.ok) throw new Error('Failed to load profile');
             return res.json();
+        },
+        {
+            revalidateOnFocus: false, // Don't refetch on window focus
+            dedupingInterval: 60000,   // Cache for 1 minute
+            revalidateIfStale: false   // Trust cache if exists
         }
     );
 

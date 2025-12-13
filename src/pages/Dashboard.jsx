@@ -32,8 +32,14 @@ export default function Dashboard() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     }).then(res => res.json());
 
-    const { data: channelsData } = useSWR(`${API_URL}/api/channels`, fetcher);
-    const { data: postsData, isLoading: postsLoading } = useSWR(`${API_URL}/api/messages?sort=hot&limit=5`, fetcher);
+    const swrOptions = {
+        revalidateOnFocus: false,
+        dedupingInterval: 300000, // 5 minutes for dashboard content
+        revalidateIfStale: false
+    };
+
+    const { data: channelsData } = useSWR(`${API_URL}/api/channels`, fetcher, swrOptions);
+    const { data: postsData, isLoading: postsLoading } = useSWR(`${API_URL}/api/messages?sort=hot&limit=5`, fetcher, swrOptions);
 
     const channels = channelsData || [];
     const hotPosts = postsData?.data || [];

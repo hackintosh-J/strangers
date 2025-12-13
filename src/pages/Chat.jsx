@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import useSWRInfinite from 'swr/infinite';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
@@ -15,7 +16,7 @@ export default function Chat() {
     const [pendingMessages, setPendingMessages] = useState([]);
     const [input, setInput] = useState('');
     const [targetUser, setTargetUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+
     const [sending, setSending] = useState(false);
     const [showStickers, setShowStickers] = useState(false);
     const [recording, setRecording] = useState(false);
@@ -33,31 +34,42 @@ export default function Chat() {
             .then(res => res.json())
             .then(data => setTargetUser(data))
             .catch(console.error);
-        fetchMessages();
-        const interval = setInterval(fetchMessages, 10000); // Poll every 10s
-        return () => clearInterval(interval);
-    }, [id, token]);
+    }, [token, id, API_URL]); // Added dependencies for useEffect
 
-    useEffect(() => {
-        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+    const getKey = (pageIndex, previousPageData) => {
+        if (!token || !id) return null;
+        // First page, no cursor
+        if (pageIndex === 0) return `${API_URL}/api/direct_messages/${id}?limit=20`;
 
-    const fetchMessages = async () => {
-        try {
-            const res = await fetch(`${API_URL}/api/direct_messages/${id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                // Backend returns array directly
-                setMessages(Array.isArray(data) ? data : []);
-            }
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+        // End of data?
+        if (previousPageData && !previousPageData.length) return null;
+
+        // Add cursor (last message id)
+        const cursor = previousPageData[0].id; // Oldest is first in array? Backend reverses it to ASC. 
+        // Wait, backend: ORDER BY created_at DESC LIMIT X -> reverse().
+        // So results[0] is the OLDEST in that batch.
+        // Yes. So cursor = results[0].id.
+        return `${API_URL}/api/direct_messages/${id}?limit=20&cursor=${cursor}`;
     };
+
+    const fetcher = (url) => fetch(url, { headers: { 'Authorization': `Bearer ${token}` } }).then(res => res.json());
+
+    const { data, size, setSize, mutate: mutateMessages, isLoading } = useSWRInfinite(getKey, fetcher, {
+        refreshInterval: 10000,
+        revalidateOnFocus: true,
+        revalidateFirstPage: false
+    });
+
+    // Flatten data
+    useEffect(() => {
+        if (data) {
+            const all = data ? [].concat(...data.reverse()) : []; // data is array of pages. Page 0 is latest. Page 1 is older.
+            // Reverse pages order so Page 1 (older) comes before Page 0 (newer).
+            setMessages(all);
+        }
+    }, [data]);
+
+    const loadMore = () => setSize(size + 1);
 
     const handleSend = async (content = input, type = 'text') => {
         if (!content.trim() && type === 'text') return;
@@ -78,7 +90,7 @@ export default function Chat() {
 
             if (res.ok) {
                 setInput('');
-                fetchMessages();
+                mutateMessages();
                 setShowStickers(false);
             }
         } catch (e) {
@@ -230,6 +242,7 @@ export default function Chat() {
             if (res.ok) {
                 // Remove locally
                 setMessages(prev => prev.filter(m => m.id !== contextMenu.msgId));
+                mutateMessages(); // Re-sync with server
             } else {
                 const err = await res.json();
                 alert(err.error || '撤回失败');
@@ -279,7 +292,7 @@ export default function Chat() {
         );
     };
 
-    if (loading) return <div className="text-center p-10">Loading...</div>;
+    if (!messagesData && !messages.length) return <div className="text-center p-10">Loading...</div>;
 
     return (
         <div className="flex flex-col h-full bg-oat-50">
@@ -300,6 +313,11 @@ export default function Chat() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-2 relative">
+                <div className="text-center mb-4">
+                    <button onClick={loadMore} className="text-xs text-oat-400 hover:text-haze-500">
+                        {isLoading ? '加载中...' : '加载更多历史消息'}
+                    </button>
+                </div>
                 {[...messages, ...pendingMessages].map(renderMessage)}
                 <div ref={scrollRef} />
 

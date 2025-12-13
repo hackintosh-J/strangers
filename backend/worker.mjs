@@ -793,9 +793,11 @@ app.get('/api/friends', authMiddleware, async (c) => {
 // --- Direct Messages APIs ---
 
 // Get DM History
+// Get DM History
 app.get('/api/direct_messages/:userId', authMiddleware, async (c) => {
     const partnerId = c.req.param('userId');
     const user = c.get('jwtPayload');
+    const { limit = 50, cursor } = c.req.query(); // limit default 50, cursor is before_id
 
     // Check if friends? Optional but safer for "Light Social". 
     // Let's enforce mutual follow for DMs to prevent spam.
@@ -808,14 +810,32 @@ app.get('/api/direct_messages/:userId', authMiddleware, async (c) => {
     if (!isFriend) return c.json({ error: "只能给互关好友发私信" }, 403);
 
     try {
-        const { results } = await c.env.DB.prepare(`
+        let query = `
             SELECT * FROM direct_messages 
-            WHERE (sender_id = ? AND receiver_id = ?) 
-               OR (sender_id = ? AND receiver_id = ?)
-            ORDER BY created_at ASC
-        `).bind(user.id, partnerId, partnerId, user.id).all();
+            WHERE ((sender_id = ? AND receiver_id = ?) 
+               OR (sender_id = ? AND receiver_id = ?))
+        `;
+        const params = [user.id, partnerId, partnerId, user.id];
 
-        return c.json(results);
+        if (cursor) {
+            query += ` AND id < ?`;
+            params.push(cursor);
+        }
+
+        // Get latest messages (DESC) then reverse logic in frontend? 
+        // Or keep backend valid. 
+        // Standard chat pagination: "Load latest 50". 
+        // If cursor provided ("Load older than X"), load previous 50.
+        // So ORDER BY created_at DESC LIMIT X.
+        query += ` ORDER BY id DESC LIMIT ?`;
+        params.push(parseInt(limit));
+
+        const { results } = await c.env.DB.prepare(query).bind(...params).all();
+
+        // Return reversed (oldest first) so frontend can append easily, or keep DESC? 
+        // Usually frontend expects chronological for chat. 
+        // Let's reverse here for convenience.
+        return c.json(results.reverse());
     } catch (e) { return c.json({ error: e.message }, 500); }
 });
 

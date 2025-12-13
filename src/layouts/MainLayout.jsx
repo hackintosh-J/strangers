@@ -32,14 +32,14 @@ export default function MainLayout() {
             <Sidebar />
 
             <main className="flex-1 w-full relative">
-                <AnimatePresence mode="wait">
+                <AnimatePresence mode="popLayout">
                     {/* Key is location.pathname to trigger animation on route change */}
                     <motion.div
                         key={location.pathname}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }} // Faster, no movement
+                        exit={{ opacity: 0, transition: { duration: 0 } }} // Instant exit
+                        transition={{ duration: 0.2 }}
                         className="w-full h-full"
                     >
                         <Outlet />

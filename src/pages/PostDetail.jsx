@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 
 import Markdown from 'react-markdown';
@@ -107,7 +108,11 @@ export default function PostDetail() {
                     <div className="p-20 text-center text-oat-300">加载中...</div>
                 ) : (
                     <>
-                        <article className="p-8 md:p-12 animate-fade-in">
+                        <motion.article className="p-8 md:p-12"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                        >
                             {/* Title & Meta */}
                             <div className="mb-8 text-center">
                                 {post.title && <h1 className="text-3xl md:text-4xl font-serif font-bold text-ink mb-4 leading-tight">{post.title}</h1>}
@@ -125,7 +130,7 @@ export default function PostDetail() {
                             <div className="prose prose-lg prose-p:text-ink prose-p:font-serif prose-p:leading-loose mx-auto mb-16">
                                 <Markdown>{post.content}</Markdown>
                             </div>
-                        </article>
+                        </motion.article>
 
                         {/* Comments Area */}
                         <div className="bg-oat-50 mt-auto border-t border-oat-200 p-8 md:p-12">

@@ -15,7 +15,10 @@ export default function Friends() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
     }).then(res => res.json());
 
-    const { data: friendsData, isLoading } = useSWR(token ? `${API_URL}/api/friends` : null, fetcher);
+    const { data: friendsData, isLoading } = useSWR(token ? `${API_URL}/api/friends` : null, fetcher, {
+        revalidateOnFocus: false,
+        dedupingInterval: 60000 // 1 minute
+    });
     const friends = friendsData || [];
     const loading = isLoading;
 
