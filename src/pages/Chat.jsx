@@ -308,7 +308,7 @@ export default function Chat() {
                         <span className="text-xs text-green-500 font-medium flex items-center gap-1">● 在线</span>
                     }
                 </div>
-                <button onClick={fetchMessages} className="p-2 text-oat-400 hover:text-haze-500 transition-colors"><RefreshCw size={20} /></button>
+                <button onClick={() => mutateMessages()} className="p-2 text-oat-400 hover:text-haze-500 transition-colors"><RefreshCw size={20} /></button>
             </div>
 
             {/* Messages */}
