@@ -92,8 +92,10 @@ export default function Echo() {
         setLoading(true);
 
         try {
-            // Prepare messages for API (exclude local-only fields if any)
-            const apiMessages = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }));
+            // Prepare messages for API (exclude local-only fields and system guidance messages)
+            const apiMessages = [...messages, userMsg]
+                .filter(m => m.role !== 'system')
+                .map(m => ({ role: m.role, content: m.content }));
 
             const response = await fetch(`${API_URL}/api/ai/chat`, {
                 method: 'POST',
@@ -161,6 +163,31 @@ export default function Echo() {
             setMessages(prev => [...prev, { role: 'assistant', content: '（Echo 似乎正在思考，连接断开了...）' }]);
         } finally {
             setLoading(false);
+
+            // Guide user after the first exchange (2 messages: 1 user + 1 assistant, or more if counting greeting)
+            // Greeting is set separately, so messages array usually starts with user msg or greeting if onBoarding.
+            // Let's rely on a simpler check: if we just finished a response and the total message count is small (e.g. around 3-4 including greeting).
+            // Actually, user wants "after first message sent". 
+            // If there was a greeting (assistant), then user sends (user), then assistant replies (assistant). Total 3.
+            // If no greeting, user (user), assistant (assistant). Total 2.
+            // Let's check if this is the first assistant response to a user input.
+
+            setMessages(prev => {
+                const hasSystemMsg = prev.some(m => m.role === 'system');
+                if (!hasSystemMsg) {
+                    // Check if we have at least one user message and one assistant response
+                    const userMsgs = prev.filter(m => m.role === 'user');
+                    const assistantMsgs = prev.filter(m => m.role === 'assistant');
+
+                    if (userMsgs.length >= 1 && assistantMsgs.length >= 1) {
+                        return [...prev, {
+                            role: 'system',
+                            content: '聊完以后，记得点击右上角的 **生成心事卡片** 按钮，我会为你保存这段珍贵的对话。'
+                        }];
+                    }
+                }
+                return prev;
+            });
         }
     };
 
@@ -246,12 +273,14 @@ export default function Echo() {
                 {/* Chat Area */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
                     {messages.map((msg, idx) => (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : msg.role === 'system' ? 'justify-center my-4' : 'justify-start'}`}>
                             <div className={`
                                 max-w-[85%] md:max-w-[70%] rounded-2xl p-4 text-sm md:text-base leading-relaxed animate-fade-in
                                 ${msg.role === 'user'
                                     ? 'bg-haze-500 text-white rounded-tr-none shadow-md'
-                                    : 'bg-oat-100 text-ink rounded-tl-none'
+                                    : msg.role === 'system'
+                                        ? 'bg-indigo-50 text-indigo-600 text-center text-xs py-2 w-full border border-indigo-100 shadow-sm'
+                                        : 'bg-oat-100 text-ink rounded-tl-none'
                                 }
                             `}>
                                 {(() => {

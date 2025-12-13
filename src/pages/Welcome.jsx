@@ -51,7 +51,7 @@ export default function Welcome() {
             </main>
 
             <footer className="p-6 text-center text-slate-300 text-sm relative z-10">
-                © 2024 The Strangers Project.
+                © 2026 The Strangers Project.
             </footer>
         </div>
     );
