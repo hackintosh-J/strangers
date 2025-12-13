@@ -9,7 +9,7 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             manifestFilename: 'manifest-v2.webmanifest', // Force new manifest URL
-            includeAssets: ['favicon.ico', 'pwa-192x192.png', 'mask-icon.svg'],
+            includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'mask-icon.svg'],
             manifest: {
                 id: '/',
                 name: 'Strangers',
