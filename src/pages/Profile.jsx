@@ -120,7 +120,7 @@ export default function Profile() {
     if (!profileUser) return null;
 
     return (
-        <div className="flex min-h-screen bg-paper">
+        <div className="flex flex-col h-full bg-paper overflow-y-auto">
             {activeModal && <Modal type={activeModal} onClose={() => setActiveModal(null)} />}
 
             <main className="flex-1 p-4 md:p-8 flex items-start justify-center pt-20">

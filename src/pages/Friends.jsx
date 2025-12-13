@@ -23,7 +23,7 @@ export default function Friends() {
     const loading = isLoading;
 
     return (
-        <div className="flex min-h-screen bg-paper">
+        <div className="flex flex-col h-full bg-paper overflow-y-auto">
 
             <main className="flex-1 p-4 md:p-8">
                 <div className="max-w-4xl mx-auto">

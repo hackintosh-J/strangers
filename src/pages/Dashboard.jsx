@@ -46,7 +46,7 @@ export default function Dashboard() {
     const loading = !channelsData || postsLoading;
 
     return (
-        <div className="flex min-h-screen bg-oat-50">
+        <div className="flex flex-col h-full bg-oat-50 overflow-y-auto scrollbar-hide">
 
 
             <main className="flex-1 w-full max-w-5xl mx-auto p-4 md:p-8 pb-24 md:pb-8">

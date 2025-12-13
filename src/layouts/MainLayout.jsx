@@ -50,11 +50,11 @@ export default function MainLayout() {
     }, [user]);
 
     return (
-        <div className="flex min-h-screen bg-oat-50">
+        <div className="flex h-screen bg-oat-50 overflow-hidden">
             {/* Sidebar is now PERMANENT here */}
             <Sidebar />
 
-            <main className="flex-1 w-full relative">
+            <main className="flex-1 w-full relative h-full overflow-hidden">
                 <AnimatePresence mode="popLayout">
                     {/* Key is location.pathname to trigger animation on route change */}
                     <motion.div

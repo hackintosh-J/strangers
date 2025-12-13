@@ -244,7 +244,7 @@ export default function Echo() {
     };
 
     return (
-        <div className="flex h-screen bg-oat-50">
+        <div className="flex h-full w-full bg-oat-50">
 
             <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full bg-white shadow-soft h-full pb-20 md:pb-0">
                 {/* Header */}
