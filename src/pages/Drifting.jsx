@@ -70,7 +70,7 @@ export default function Drifting() {
     };
 
     return (
-        <div className="flex h-screen bg-oat-50 overflow-hidden relative">
+        <div className="flex h-full w-full bg-oat-50 overflow-hidden relative">
 
 
             <main className="flex-1 relative w-full h-full flex flex-col items-center justify-center p-4">

@@ -54,7 +54,7 @@ export default function PostDetail() {
     if (!post && !loading) return <div className="text-center p-20">404 Not Found</div>;
 
     return (
-        <div className="flex min-h-screen bg-paper">
+        <div className="flex flex-col h-full bg-paper overflow-y-auto">
 
 
             <main className="flex-1 w-full max-w-4xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft flex flex-col pb-20 md:pb-0">

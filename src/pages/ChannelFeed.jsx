@@ -80,7 +80,7 @@ export default function ChannelFeed() {
     };
 
     return (
-        <div className="flex min-h-screen bg-paper">
+        <div className="flex flex-col h-full bg-paper overflow-y-auto">
 
 
             <main className="flex-1 md:ml-0 w-full max-w-4xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft pb-24 md:pb-0">

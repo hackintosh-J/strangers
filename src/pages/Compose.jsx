@@ -72,7 +72,7 @@ export default function Compose() {
     };
 
     return (
-        <div className="flex min-h-screen bg-paper">
+        <div className="flex flex-col h-full bg-paper overflow-y-auto">
 
             <main className="flex-1 w-full max-w-3xl mx-auto border-x border-oat-200 min-h-screen bg-white shadow-soft">
                 {/* Header */}
